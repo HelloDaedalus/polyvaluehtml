@@ -1304,26 +1304,51 @@ async function scanPlayerInventory(uid, username){
       }
     }
 
-    // Build a set of tracked item IDs for fast lookup
-    const trackedIds=new Set(allItemsFlat.map(i=>String(i.id)));
+    // If getUsersLatestHistory returned nothing, fall back
+    if(!history.length) throw new Error("empty history, falling back");
 
-    // Group by itemId — a user can own multiple serials of the same item
+    // Build lookup of already-known items
+    const knownItems=new Map(allItemsFlat.map(i=>[String(i.id),i]));
+    // Also check itemCache
+    Object.entries(itemCache).forEach(([id,item])=>{ if(!knownItems.has(id)) knownItems.set(id,item); });
+
+    // Collect unknown item IDs to fetch
+    const unknownIds=new Set();
     for(const entry of history){
       const itemId=String(entry.itemId||entry.item_id||entry.id||"");
-      if(!itemId || !trackedIds.has(itemId)) continue;
-      const item=allItemsFlat.find(i=>String(i.id)===itemId);
-      if(!item) continue;
+      if(itemId && !knownItems.has(itemId)) unknownIds.add(itemId);
+    }
+
+    // Fetch unknown items in batches from polytoria.trade
+    if(unknownIds.size){
+      setProgress(`Loading ${unknownIds.size} item details…`);
+      const ids=[...unknownIds];
+      for(let i=0;i<ids.length;i+=6){
+        const batch=ids.slice(i,i+6);
+        await Promise.all(batch.map(async id=>{
+          try{
+            const inp=encodeURIComponent(JSON.stringify({"0":Number(id),"1":Number(id)}));
+            const r=await fetch(T+"getItemWithTags,getItemGraph?batch=1&input="+inp,
+              {headers:{"content-type":"application/json"}});
+            const j=await r.json();
+            const item=j[0]?.result?.data;
+            if(item){ knownItems.set(String(item.id||id), item); itemCache[item.id||id]=item; }
+          }catch(e){}
+        }));
+      }
+    }
+
+    // Group by itemId — show ALL owned items, not just tracked ones
+    for(const entry of history){
+      const itemId=String(entry.itemId||entry.item_id||entry.id||"");
+      if(!itemId) continue;
+      const item=knownItems.get(itemId)||{id:itemId, name:"Item "+itemId, thumbnailUrl:"", recentAverage:0};
       const serial=entry.serial||entry.serialNumber||null;
       if(ownedMap.has(itemId)){
         if(serial) ownedMap.get(itemId).serials.push(serial);
       } else {
         ownedMap.set(itemId,{item, serials:serial?[serial]:[]});
       }
-    }
-
-    // If getUsersLatestHistory returned nothing useful, fall back to owner scan
-    if(!history.length){
-      throw new Error("empty history, falling back");
     }
 
   } catch(fallbackErr){
