@@ -1195,24 +1195,49 @@ window.lookupPlayer=async function(q){
   document.getElementById("player-input").value=q;
   res.innerHTML=`<div class="spinner"></div>`;
 
-  let uid=q, u=null;
+  let uid=q, u=null, tradeUsername=q;
 
-  // Try Polytoria API — but don't fail if it's down
+  // Step 1: resolve username to numeric ID
   try{
     if(!/^\d+$/.test(q)){
       const sd=await fetch(POLY+"/users/find?username="+encodeURIComponent(q)).then(r=>r.json());
-      if(sd?.id) uid=sd.id; else throw new Error("not found");
+      if(sd?.id){ uid=sd.id; tradeUsername=sd.username||q; }
+      else throw new Error("not found");
     }
-    const ud=await fetch(POLY+"/users/"+uid).then(r=>r.json());
-    if(!ud.message) u=ud;
-  }catch(e){ /* Polytoria API unavailable, continue with what we have */ }
+  }catch(e){}
+
+  // Step 2: fetch profile from polytoria.trade getUser tRPC endpoint
+  try{
+    const input=encodeURIComponent(JSON.stringify({"0":Number(uid)||uid}));
+    const td=await fetch(T+"getUser?batch=1&input="+input,{headers:{"content-type":"application/json"}}).then(r=>r.json());
+    const tu=td[0]?.result?.data;
+    if(tu && !tu.error){
+      u={
+        username: tu.username||tu.name||tradeUsername,
+        thumbnail: tu.thumbnail||tu.avatarUrl||tu.avatar||null,
+        description: tu.description||tu.bio||null,
+        level: tu.level??null,
+        registeredAt: tu.createdAt||tu.registeredAt||null,
+        lastSeenAt: tu.lastSeenAt||tu.updatedAt||null,
+      };
+      if(tu.username) tradeUsername=tu.username;
+    }
+  }catch(e){}
+
+  // Step 3: fall back to Polytoria API if trade didn't give us profile data
+  if(!u){
+    try{
+      const ud=await fetch(POLY+"/users/"+uid).then(r=>r.json());
+      if(!ud.message){ u=ud; if(u?.username) tradeUsername=u.username; }
+    }catch(e){}
+  }
 
   // Build profile card — works with or without Polytoria data
   res.innerHTML=`<div class="card">
     <div class="profile-hdr">
       ${u?.thumbnail?`<img class="pav" src="${esc(u.thumbnail)}" onerror="this.style.display='none'">`:`<div class="pav" style="display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--txt3)">◈</div>`}
       <div>
-        <div class="pname">${esc(u?.username||q)}</div>
+        <div class="pname">${esc(tradeUsername)}</div>
         <div class="psub">
           ${uid?`ID: ${uid}`:""}
           ${u?.registeredAt?" · Joined "+new Date(u.registeredAt).toLocaleDateString("en-US",{year:"numeric",month:"long"}):""}
@@ -1227,7 +1252,7 @@ window.lookupPlayer=async function(q){
       ${u.lastSeenAt?`<div class="sbox"><div class="sval" style="font-size:12px">${new Date(u.lastSeenAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div><div class="slbl">Last Seen</div></div>`:""}
     </div>`:""}
     <div style="display:flex;gap:8px;margin-bottom:16px">
-      <a href="https://polytoria.com/users/${uid}" target="_blank" class="btn btn-p" style="text-decoration:none;flex:1;justify-content:center">View Profile</a>
+      <a href="https://polytoria.com/u/${tradeUsername}" target="_blank" class="btn btn-p" style="text-decoration:none;flex:1;justify-content:center">View Profile</a>
       <a href="https://polytoria.com/trade/new/${uid}" target="_blank" class="btn" style="text-decoration:none;flex:1;justify-content:center;background:var(--green);color:#fff;border-color:var(--green)">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
         Trade
@@ -1243,7 +1268,7 @@ window.lookupPlayer=async function(q){
   </div>`;
 
   // Scan limiteds from polytoria.trade owners data + our item cache
-  scanPlayerInventory(uid, u?.username||q);
+  scanPlayerInventory(uid, tradeUsername);
   loadRapHistory(uid);
 };
 
