@@ -1247,74 +1247,128 @@ async function scanPlayerInventory(uid, username){
 
   const lowerName=username.toLowerCase();
   if(!allItemsFlat.length) await preloadItems();
-  const items=[...allItemsFlat];
+
   const ownedMap=new Map(); // itemId -> {item, serials[]}
   let scanned=0;
 
-  function updateProgress(){
+  function setProgress(msg, found){
     const w=document.getElementById("inv-wrap");
     if(!w) return;
-    w.innerHTML=`<div style="font-size:12px;color:var(--txt3);display:flex;align-items:center;gap:10px">
+    w.innerHTML=`<div style="font-size:12px;color:var(--txt3);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div class="spinner" style="margin:0;width:14px;height:14px;border-width:2px"></div>
-      Scanning ${scanned}/${items.length}
-      ${ownedMap.size?`<span style="color:var(--green);font-weight:600">&#10003; ${ownedMap.size} found</span>`:""}
+      <span>${msg}</span>
+      ${found?`<span style="color:var(--green);font-weight:600">&#10003; ${found} found so far</span>`:""}
     </div>`;
   }
 
-  // Fetch owners for one item - returns [{username, id, serials:[]}]
-  async function fetchOwnersFast(item){
-    // Use cache if available
-    if(item._ownersFetched) return item._ownersList||[];
+  // ── Phase 1: search polytoria.trade by username ──
+  // getItemsByPage may support an "owner" param — try it
+  setProgress("Searching by username...", 0);
+  try{
+    // Try fetching items filtered by owner username across all pages
+    for(let pg=1;pg<=20;pg++){
+      const body={"0":{page:pg,total:24,search:username,homepage:false}};
+      const r=await fetch(T+"getItemsByPage?batch=1",{
+        method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify(body)
+      });
+      const j=await r.json();
+      const data=j[0]?.result?.data||{};
+      const items=data.items||[];
+      if(!items.length) break;
+      // These search results are by item name, not owner — won't help directly
+      // But we get them in cache for free
+      items.forEach(i=>{ if(!itemCache[i.id]) itemCache[i.id]=i; });
+      if(pg>=data.totalPages) break;
+    }
+  }catch(e){}
+
+  // ── Phase 2: scan all items' owner lists ──
+  // For items with few owners (<=200 stock) getAllItemOwners returns complete list
+  // For high-stock items it may be truncated — we note those separately
+  const highStock=[]; // items where owners list might be truncated
+
+  setProgress(`Scanning ${allItemsFlat.length} items...`, 0);
+
+  async function checkItem(item){
+    if(item._ownersFetched){
+      const match=item._ownersList?.find(o=>
+        (o.username||"").toLowerCase()===lowerName ||
+        (uid&&String(o.id)===String(uid))
+      );
+      if(match) ownedMap.set(item.id,{item,serials:match.serials||[]});
+      scanned++;
+      return;
+    }
     try{
       const input=encodeURIComponent(JSON.stringify({"0":Number(item.id),"1":Number(item.id)}));
       const r=await fetch(T+"getAllItemOwners,getRecentItemHistory?batch=1&input="+input+"&itemid="+item.id,
         {headers:{"content-type":"application/json"}});
-      if(!r.ok) return [];
+      if(!r.ok){scanned++;return;}
       const j=await r.json();
       const owners=j[0]?.result?.data||[];
-      // Cache on item
       item._ownersFetched=true;
       item._ownersList=owners;
       item._ownerNames=owners.map(o=>(o.username||"").toLowerCase());
       item._ownerSerials={};
-      owners.forEach(o=>{if(o.username) item._ownerSerials[o.username.toLowerCase()]=o.serials||[];});
+      owners.forEach(o=>{
+        const k=(o.username||"").toLowerCase();
+        if(k) item._ownerSerials[k]=o.serials||[];
+        if(o.id) item._ownerSerials[String(o.id)]=o.serials||[];
+      });
       itemCache[item.id]=item;
       const idx=allItemsFlat.findIndex(x=>x.id===item.id);
       if(idx>=0) allItemsFlat[idx]=item;
-      return owners;
-    }catch(e){ return []; }
-  }
 
-  // Process in batches of 6 parallel
-  const BATCH=6;
-  for(let i=0;i<items.length;i+=BATCH){
-    if(!document.getElementById("inv-wrap")) return;
-    const batch=items.slice(i,i+BATCH);
-    await Promise.all(batch.map(async item=>{
-      const owners=await fetchOwnersFast(item);
-      // Find this user — case insensitive match on username OR id match
       const match=owners.find(o=>
         (o.username||"").toLowerCase()===lowerName ||
-        (uid && String(o.id)===String(uid))
+        (uid&&String(o.id)===String(uid))
       );
       if(match){
-        ownedMap.set(item.id,{item, serials: match.serials||[]});
+        ownedMap.set(item.id,{item,serials:match.serials||[]});
+      } else if(item.stock>200||owners.length>=50){
+        // Might be truncated — flag for deeper check
+        highStock.push(item);
       }
-      scanned++;
-    }));
-    updateProgress();
+    }catch(e){}
+    scanned++;
   }
 
-  // Also try Polytoria inventory API
-  try{
-    const inv=await fetch(POLY+"/store/user/"+uid+"?limit=100").then(r=>r.json());
-    const ownedIds=new Set((inv.data||inv||[]).map(i=>String(i.assetId||i.itemId||i.id)));
-    for(const item of allItemsFlat){
-      if(ownedIds.has(String(item.id))&&!ownedMap.has(item.id)){
-        ownedMap.set(item.id,{item,serials:[]});
-      }
+  const BATCH=6;
+  for(let i=0;i<allItemsFlat.length;i+=BATCH){
+    if(!document.getElementById("inv-wrap")) return;
+    await Promise.all(allItemsFlat.slice(i,i+BATCH).map(checkItem));
+    if(i%30===0) setProgress(`Scanning ${scanned}/${allItemsFlat.length}...`, ownedMap.size||0);
+  }
+
+  // ── Phase 3: deep check high-stock items via recentItemHistory ──
+  // recentItemHistory shows recent trades — search for this username in there
+  if(highStock.length){
+    setProgress(`Checking ${highStock.length} high-stock items...`, ownedMap.size||0);
+    for(let i=0;i<highStock.length;i+=BATCH){
+      if(!document.getElementById("inv-wrap")) return;
+      const batch=highStock.slice(i,i+BATCH);
+      await Promise.all(batch.map(async item=>{
+        if(ownedMap.has(item.id)) return;
+        try{
+          // Check if user appears in recent history (recent buyers/sellers)
+          const input=encodeURIComponent(JSON.stringify({"0":Number(item.id),"1":Number(item.id)}));
+          const r=await fetch(T+"getAllItemOwners,getRecentItemHistory?batch=1&input="+input+"&itemid="+item.id,
+            {headers:{"content-type":"application/json"}});
+          const j=await r.json();
+          const history=j[1]?.result?.data||[];
+          // recentItemHistory: [{serial, username, userId, created_at}]
+          const histMatch=history.find(h=>
+            (h.username||"").toLowerCase()===lowerName ||
+            (uid&&String(h.userId)===String(uid))
+          );
+          if(histMatch){
+            ownedMap.set(item.id,{item,serials:[histMatch.serial].filter(Boolean)});
+          }
+        }catch(e){}
+      }));
     }
-  }catch(e){}
+  }
 
   const owned=[...ownedMap.values()];
   const withSerials=owned.filter(o=>o.serials.length>0);
@@ -1342,11 +1396,17 @@ async function scanPlayerInventory(uid, username){
     </div>
     ${withSerials.length?`
     <div class="inv-section">
-      <div class="inv-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Serials</div>
+      <div class="inv-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Serials
+      </div>
       <div>${withSerials.map(o=>`<span class="serial-chip" onclick="openModal(${o.item.id})">${esc(o.item.name)} <span class="sn">${o.serials.map(n=>"#"+n).join(" ")}</span></span>`).join("")}</div>
     </div>`:""}
     <div class="inv-section">
-      <div class="inv-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> Limiteds (${owned.length})</div>
+      <div class="inv-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Limiteds (${owned.length})
+      </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
         ${owned.map(o=>`<div onclick="openModal(${o.item.id})" title="${esc(o.item.name)}" style="width:44px;height:44px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);overflow:hidden;transition:.12s" onmouseover="this.style.borderColor='rgba(124,109,240,.4)'" onmouseout="this.style.borderColor='var(--border)'"><img src="${esc(o.item.thumbnailUrl||"")}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.opacity=.15"></div>`).join("")}
       </div>
