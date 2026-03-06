@@ -1291,6 +1291,13 @@ async function scanPlayerInventory(uid, username){
 
     // Response shape: [{result:{data:[{itemId, serial, ...}, ...]}}]
     const history=j[0]?.result?.data||[];
+    if(history.length){
+      console.log("getUsersLatestHistory total entries:", history.length);
+      console.log("sample[0]:", JSON.stringify(history[0]));
+      console.log("sample[1]:", JSON.stringify(history[1]));
+      const uniqueItemIds=new Set(history.map(e=>e.itemId||e.item_id||e.item?.id||e.id||"?"));
+      console.log("unique item IDs in history:", uniqueItemIds.size, [...uniqueItemIds].slice(0,10));
+    }
 
     // Extract username from first history entry if available
     if(history.length){
@@ -1338,16 +1345,45 @@ async function scanPlayerInventory(uid, username){
       }
     }
 
-    // Group by itemId — show ALL owned items, not just tracked ones
+    // getUsersLatestHistory = trade history (each entry is a transaction).
+    // The SAME serial can appear multiple times (bought, sold, re-bought).
+    // Only count a serial if this user is the CURRENT owner = their entry is
+    // the most recent one for that serial.
+    // Each entry has: { itemId, serial, buyerId/userId/toId, sellerId/fromId, createdAt }
+    // We group all entries per serial, sort by date, keep last — if last buyer = uid → owned.
+
+    const serialHistory = new Map(); // "itemId:serial" -> latest entry
     for(const entry of history){
-      const itemId=String(entry.itemId||entry.item_id||entry.id||"");
-      if(!itemId) continue;
-      const item=knownItems.get(itemId)||{id:itemId, name:"Item "+itemId, thumbnailUrl:"", recentAverage:0};
+      const itemId=String(entry.itemId||entry.item_id||"");
       const serial=entry.serial||entry.serialNumber||null;
+      if(!itemId||serial==null) continue;
+      const key=itemId+":"+serial;
+      const existing=serialHistory.get(key);
+      // Keep the most recent entry per serial
+      const entryTime=entry.createdAt||entry.created_at||entry.date||"";
+      const existingTime=existing?.createdAt||existing?.created_at||existing?.date||"";
+      if(!existing || entryTime > existingTime){
+        serialHistory.set(key,{...entry, itemId, serial});
+      }
+    }
+
+    // Now check if this user is the buyer/current owner on the latest entry
+    const uidStr=String(uid);
+    for(const [key, entry] of serialHistory){
+      const itemId=String(entry.itemId);
+      const serial=entry.serial;
+      // buyer field may be buyerId, toUserId, toId, userId, or nested buyer.id
+      const buyerId=String(entry.buyerId||entry.toUserId||entry.toId||
+                           entry.buyer?.id||entry.to?.id||entry.userId||"");
+      // If no buyer field at all, assume these are already "current ownership" entries
+      const isOwner = !buyerId || buyerId===uidStr || buyerId==="0";
+      if(!isOwner) continue;
+
+      const item=knownItems.get(itemId)||{id:itemId,name:"Item "+itemId,thumbnailUrl:"",recentAverage:0};
       if(ownedMap.has(itemId)){
-        if(serial) ownedMap.get(itemId).serials.push(serial);
+        ownedMap.get(itemId).serials.push(serial);
       } else {
-        ownedMap.set(itemId,{item, serials:serial?[serial]:[]});
+        ownedMap.set(itemId,{item, serials:[serial]});
       }
     }
 
