@@ -854,7 +854,7 @@ function renderModal(item,content,cc,graphPts,owners,recent,listing){
         Owners <span class="gpill">${owners.length}</span>
       </div>
       <div class="own-row">${owners.slice(0,12).map(o=>`
-        <div class="own-chip" title="View profile" onclick="closeModal();document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelector('[data-page=players]').classList.add('active');document.getElementById('page-players').classList.add('active');lookupPlayer('${esc(String(o.username||o.id||""))}')">
+        <div class="own-chip" title="View profile" onclick="closeModal();document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelector('[data-page=players]').classList.add('active');document.getElementById('page-players').classList.add('active');lookupPlayer('${String(o.id||o.username||"")}','${esc(String(o.username||""))}')">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--txt3)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
           <span>${esc(o.username||"User "+o.id)}</span>
           ${o.serials?.length?`<span style="color:var(--gold);font-family:'Space Mono';font-size:9px">#${o.serials.slice(0,3).join(" #")}${o.serials.length>3?" +":""}
@@ -1185,7 +1185,7 @@ window.deleteTrade=async function(id){
 document.getElementById("player-btn").addEventListener("click",()=>{const v=document.getElementById("player-input").value.trim();if(v)lookupPlayer(v);});
 document.getElementById("player-input").addEventListener("keydown",e=>{if(e.key==="Enter"){const v=e.target.value.trim();if(v)lookupPlayer(v);}});
 
-window.lookupPlayer=async function(q){
+window.lookupPlayer=async function(q, knownUsername){
   const res=document.getElementById("player-result");
   // switch to player tab
   document.querySelectorAll(".ntab").forEach(b=>b.classList.remove("active"));
@@ -1195,57 +1195,32 @@ window.lookupPlayer=async function(q){
   document.getElementById("player-input").value=q;
   res.innerHTML=`<div class="spinner"></div>`;
 
-  let uid=null, u=null, tradeUsername=q;
+  // If q is numeric it's already a uid (passed from owner chip).
+  // If it's a username, search cached owner lists for their numeric id.
+  let uid = /^\d+$/.test(q) ? q : null;
+  let tradeUsername = knownUsername || (uid ? q : q);
+  let u = { username: tradeUsername, thumbnail: null, description: null, level: null, registeredAt: null, lastSeenAt: null };
 
-  // ── Resolve user entirely via polytoria.trade (no polytoria.com API calls) ──
-  // Strategy: if input is a username, find them in getAllItemOwners of any cached item.
-  // If input is a numeric ID, use it directly.
-  // Then call getUsersLatestHistory which gives us inventory + confirms the user exists.
-
-  if(/^\d+$/.test(q)){
-    // Numeric ID passed directly
-    uid=q;
-  } else {
-    // Search cached item owners for this username
-    const lowerQ=q.toLowerCase();
-    for(const item of allItemsFlat){
-      const owners=item._ownersList||[];
-      const match=owners.find(o=>(o.username||"").toLowerCase()===lowerQ);
-      if(match && match.id){ uid=String(match.id); tradeUsername=match.username||q; break; }
-    }
-    // If not found in cache, try fetching a broad item to find the user
-    if(!uid){
-      // Try to find via any item's owner list — fetch first few items
-      const tryItems=allItemsFlat.slice(0,5);
-      for(const item of tryItems){
-        if(item._ownersFetched) continue;
-        try{
-          const inp=encodeURIComponent(JSON.stringify({"0":Number(item.id),"1":Number(item.id)}));
-          const r=await fetch(T+"getAllItemOwners,getRecentItemHistory?batch=1&input="+inp+"&itemid="+item.id,
-            {headers:{"content-type":"application/json"}});
-          const j=await r.json();
-          const owners=j[0]?.result?.data||[];
-          item._ownersFetched=true; item._ownersList=owners;
-          const match=owners.find(o=>(o.username||"").toLowerCase()===lowerQ);
-          if(match && match.id){ uid=String(match.id); tradeUsername=match.username||q; break; }
-        }catch(e){}
+  if(!uid){
+    if(!allItemsFlat.length) await preloadItems();
+    const lowerQ = q.toLowerCase();
+    outer: for(const item of allItemsFlat){
+      for(const owner of (item._ownersList||[])){
+        if((owner.username||"").toLowerCase()===lowerQ && owner.id){
+          uid=String(owner.id); tradeUsername=owner.username||q; u.username=tradeUsername; break outer;
+        }
       }
     }
   }
 
-  // If we still don't have a uid, show not found
   if(!uid){
     document.getElementById("player-result").innerHTML=
       `<div class="card" style="padding:24px;text-align:center;color:var(--txt3)">
-        Could not find user <strong style="color:var(--txt)">${esc(q)}</strong> in polytoria.trade data.<br>
-        <span style="font-size:11px">Try searching by numeric user ID, or look up an item they own first.</span>
+        Could not find <strong style="color:var(--txt)">${esc(q)}</strong>.<br>
+        <span style="font-size:11px">Open an item they own first, then try again — or enter their numeric user ID.</span>
       </div>`;
     return;
   }
-
-  // Fetch inventory via getUsersLatestHistory — this also confirms the user exists
-  // and gives us their username/id. Profile data comes from the item owners cache.
-  u = { username: tradeUsername, thumbnail: null, description: null, level: null, registeredAt: null, lastSeenAt: null };
 
   // Build profile card — works with or without Polytoria data
   res.innerHTML=`<div class="card">
