@@ -22,16 +22,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 /* ── ANIMATIONS ── */
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,232,152,0.6)}70%{box-shadow:0 0 0 6px rgba(0,232,152,0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-@keyframes popIn{0%{opacity:0;transform:scale(0.92)}100%{opacity:1;transform:scale(1)}}
-@keyframes glow-pulse-rare{0%,100%{box-shadow:var(--glow-rare)}50%{box-shadow:0 0 0 1px rgba(184,173,255,0.5),0 6px 48px rgba(124,109,240,0.35)}}
-@keyframes glow-pulse-gold{0%,100%{box-shadow:var(--glow-hoarded)}50%{box-shadow:0 0 0 1px rgba(255,204,85,0.5),0 6px 48px rgba(255,170,0,0.3)}}
+@keyframes popIn{0%{opacity:0;transform:scale(0.95)}100%{opacity:1;transform:scale(1)}}
 @keyframes draw-line{from{stroke-dashoffset:1000}to{stroke-dashoffset:0}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 
-.fade-up{animation:fadeUp .35s ease both}
-.pop-in{animation:popIn .28s cubic-bezier(.34,1.4,.64,1) both}
+.fade-up{animation:fadeUp .3s cubic-bezier(.22,1,.36,1) both}
+.pop-in{animation:popIn .22s cubic-bezier(.22,1,.36,1) both}
 
 /* ── NAV ── */
 .nav{background:rgba(6,6,14,0.88);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:58px;position:sticky;top:0;z-index:100;backdrop-filter:blur(28px) saturate(1.8)}
@@ -70,16 +67,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
 /* ── ITEM GRID ── */
 .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(192px,1fr));gap:14px}
-.item-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:.22s all;position:relative;animation:fadeUp .3s ease both}
-.item-card:hover{transform:translateY(-4px) scale(1.01)}
+.item-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s ease, border-color .2s ease;position:relative;animation:fadeUp .3s cubic-bezier(.22,1,.36,1) both;will-change:transform}
+.item-card:hover{transform:translateY(-4px) scale(1.015)}
 .item-card.is-rare{box-shadow:var(--glow-rare);border-color:rgba(184,173,255,0.3)}
-.item-card.is-rare:hover{animation:glow-pulse-rare 1.8s ease infinite}
+.item-card.is-rare:hover{box-shadow:0 0 0 1px rgba(184,173,255,0.5),0 8px 40px rgba(124,109,240,0.3);border-color:rgba(184,173,255,0.5)}
 .item-card.is-hoarded{box-shadow:var(--glow-hoarded);border-color:rgba(255,204,85,0.25)}
-.item-card.is-hoarded:hover{animation:glow-pulse-gold 1.8s ease infinite}
+.item-card.is-hoarded:hover{box-shadow:0 0 0 1px rgba(255,204,85,0.45),0 8px 40px rgba(255,170,0,0.25);border-color:rgba(255,204,85,0.45)}
 .item-card.is-projected{box-shadow:var(--glow-projected);border-color:rgba(240,104,88,0.25)}
+.item-card.is-projected:hover{box-shadow:0 0 0 1px rgba(240,104,88,0.45),0 8px 40px rgba(200,60,40,0.25);border-color:rgba(240,104,88,0.45)}
 .item-card:nth-child(1){animation-delay:.02s}.item-card:nth-child(2){animation-delay:.04s}.item-card:nth-child(3){animation-delay:.06s}
 .item-card:nth-child(4){animation-delay:.08s}.item-card:nth-child(5){animation-delay:.10s}.item-card:nth-child(6){animation-delay:.12s}
-.item-card:nth-child(7){animation-delay:.14s}.item-card:nth-child(8){animation-delay:.16s}.item-card:nth-child(9){animation-delay:.18s}
+.item-card:nth-child(7){animation-delay:.13s}.item-card:nth-child(8){animation-delay:.14s}.item-card:nth-child(9){animation-delay:.15s}
+.item-card:nth-child(n+10){animation-delay:.16s}
 
 .item-img-wrap{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:16px;position:relative;overflow:hidden}
 .item-img-wrap::before{content:'';position:absolute;inset:0;opacity:0;transition:.3s}
@@ -91,8 +90,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .item-img-wrap.bg-projected{background:linear-gradient(145deg,#1a0804 0%,#220a06 100%)}
 .item-img-wrap.bg-projected::before{background:radial-gradient(circle at 50% 50%,rgba(240,80,40,0.1),transparent 70%)}
 .item-img-wrap.bg-default{background:var(--bg3)}
-.item-img{width:100%;height:100%;object-fit:contain;transition:.25s transform;position:relative;z-index:1}
-.item-card:hover .item-img{transform:scale(1.06) translateY(-2px);animation:float 2.5s ease infinite}
+.item-img{width:100%;height:100%;object-fit:contain;transition:transform .25s cubic-bezier(.22,1,.36,1);position:relative;z-index:1}
+.item-card:hover .item-img{transform:scale(1.07) translateY(-3px)}
 
 /* corner pips */
 .corner-pips{position:absolute;top:9px;right:9px;display:flex;flex-direction:column;gap:4px;z-index:2}
@@ -462,8 +461,8 @@ document.getElementById("btn-prev").addEventListener("click",()=>{if(pg>1){pg--;
 document.getElementById("btn-next").addEventListener("click",()=>{if(pg<totalPg){pg++;loadItems();}});
 
 // ── Fetch helpers ──
-async function apiFetch(path,body){
-  const opts={method:body?"POST":"GET",headers:{"content-type":"application/json"}};
+async function apiFetch(path, body){
+  const opts={method:body?"POST":"GET",headers:{"content-type":"application/json","referer":"https://polytoria.trade/","origin":"https://polytoria.trade"}};
   if(body) opts.body=JSON.stringify(body);
   const r=await fetch(T+path,opts);
   if(!r.ok) throw new Error("HTTP "+r.status);
@@ -476,15 +475,18 @@ async function fetchPage(page,search){
 }
 
 async function fetchItemGraph(id){
-  const url=T+`getItemWithTags,getItemGraph?batch=1&input=${encodeURIComponent(JSON.stringify({"0":id,"1":id}))}`;
-  const r=await fetch(url,{headers:{"content-type":"application/json"}});
+  // GET endpoint - input in query string
+  const input=encodeURIComponent(JSON.stringify({"0":Number(id),"1":Number(id)}));
+  const url=T+`getItemWithTags,getItemGraph?batch=1&input=${input}`;
+  const r=await fetch(url,{headers:{"content-type":"application/json","referer":"https://polytoria.trade/store/"+id,"origin":"https://polytoria.trade"}});
   if(!r.ok) throw new Error("HTTP "+r.status);
-  return r.json(); // [{result:{data:item}},{result:{data:graph[]}}]
+  return r.json();
 }
 
 async function fetchOwners(id){
-  const url=T+`getAllItemOwners,getRecentItemHistory?batch=1&input=${encodeURIComponent(JSON.stringify({"0":id,"1":id}))}`;
-  const r=await fetch(url,{headers:{"content-type":"application/json"}});
+  const input=encodeURIComponent(JSON.stringify({"0":Number(id),"1":Number(id)}));
+  const url=T+`getAllItemOwners,getRecentItemHistory?batch=1&input=${input}`;
+  const r=await fetch(url,{headers:{"content-type":"application/json","referer":"https://polytoria.trade/store/"+id,"origin":"https://polytoria.trade"}});
   if(!r.ok) throw new Error("HTTP "+r.status);
   return r.json();
 }
@@ -508,9 +510,9 @@ async function loadItems(){
     if(fProjected) items=items.filter(i=>hasTag(i,"Projected"));
     grid.innerHTML="";
     if(!items.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">◈</div><h3>Nothing here</h3><p>Try different filters</p></div>';return;}
-    items.forEach((item,idx)=>{
+    items.forEach(item=>{
       const w=document.createElement("div");
-      w.innerHTML=renderCard(item,idx);
+      w.innerHTML=renderCard(item);
       grid.appendChild(w.firstChild);
     });
     const t=`Page ${pg} / ${totalPg}`;
@@ -523,12 +525,12 @@ async function loadItems(){
 
 function hasTag(item,name){return item.tags?.some(t=>allTags.find(a=>a.id===t.tagId)?.name===name);}
 
-function renderCard(item,idx=0){
+function renderCard(item){
   const cc=getCardCls(item.tags,allTags);
   const bg=getBgCls(cc);
   const pips=cornerPips(item.tags,allTags);
   const pills=tagPills(item.tags,allTags);
-  return `<div class="item-card ${cc}" onclick="openModal(${item.id})" style="animation-delay:${idx*0.03}s">
+  return `<div class="item-card ${cc}" onclick="openModal(${item.id})">
     <div class="item-img-wrap bg-${bg}">
       <img class="item-img" src="${esc(item.thumbnailUrl||"")}" loading="lazy" alt="" onerror="this.style.opacity=.15">
       ${pips?`<div class="corner-pips">${pips}</div>`:""}
@@ -553,60 +555,35 @@ window.openModal=async function(id){
   overlay.classList.add("open");
   box.className="modal";
 
+  // Show spinner immediately while we fetch
   const cached=itemCache[id];
-  if(cached){
-    const cc=getCardCls(cached.tags,allTags);
-    box.className="modal"+(cc?" "+cc:"");
-    renderModalShell(cached,content,cc);
-  } else {
-    content.innerHTML='<div class="spinner" style="margin:60px auto"></div>';
-  }
+  const cc=cached?getCardCls(cached.tags,allTags):"";
+  if(cc) box.className="modal "+cc;
+  content.innerHTML=`<div style="padding:60px 0;display:flex;align-items:center;justify-content:center"><div class="spinner"></div></div>`;
 
-  // Load graph + owners in parallel
   try{
     const [graphRes,ownersRes]=await Promise.all([fetchItemGraph(id),fetchOwners(id)]);
     const graphData=graphRes[1]?.result?.data||[];
     const ownersData=ownersRes[0]?.result?.data||[];
-    const historyData=ownersRes[1]?.result?.data||[];
     const item=graphRes[0]?.result?.data||cached;
-    if(item){itemCache[item.id]=item;}
-    const cc=getCardCls(item?.tags||[],allTags);
-    box.className="modal"+(cc?" "+cc:"");
-    renderModalFull(item||cached,content,cc,graphData,ownersData,historyData);
+    if(item) itemCache[item.id]=item;
+    const finalCc=getCardCls(item?.tags||[],allTags);
+    box.className="modal"+(finalCc?" "+finalCc:"");
+    renderModalFull(item||cached,content,finalCc,graphData,ownersData);
   }catch(e){
-    if(cached) renderModalFull(cached,content,getCardCls(cached.tags,allTags),[],[],[]);
+    // fallback to cached data with empty graph
+    const item=cached;
+    if(item){
+      const finalCc=getCardCls(item.tags||[],allTags);
+      box.className="modal"+(finalCc?" "+finalCc:"");
+      renderModalFull(item,content,finalCc,[],[]);
+    } else {
+      content.innerHTML=`<div style="padding:40px;text-align:center;color:var(--txt3)">Failed to load item</div>`;
+    }
   }
 };
 
-function renderModalShell(item,content,cc){
-  const bg=getBgCls(cc);
-  const pills=tagPills(item.tags||[],allTags);
-  content.innerHTML=`
-    <div class="modal-hero">
-      <div class="modal-thumb-wrap bg-${bg}">
-        <img class="modal-thumb" src="${esc(item.thumbnailUrl||"")}" alt="" onerror="this.style.opacity=.15">
-      </div>
-      <div class="modal-meta">
-        <div class="modal-name">${esc(item.name)}</div>
-        ${item.shorthand?`<div class="modal-aka">aka ${esc(item.shorthand)}</div>`:""}
-        <div class="modal-badges">${pills}</div>
-        ${item.stats?.funFact?`<div class="funfact">${esc(item.stats.funFact)}</div>`:""}
-      </div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-box"><div class="stat-val" style="color:var(--green)">${num(item.recentAverage)}</div><div class="stat-lbl">RAP</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:var(--accent2)">${item.stats?.value!=null?num(item.stats.value):"—"}</div><div class="stat-lbl">Value</div></div>
-      <div class="stat-box"><div class="stat-val" style="font-size:13px">${item.stats?.demand||"—"}</div><div class="stat-lbl">Demand</div></div>
-      <div class="stat-box"><div class="stat-val" style="font-size:13px">${item.stats?.trend||"—"}</div><div class="stat-lbl">Trend</div></div>
-    </div>
-    <div class="graph-section"><div class="graph-wrap loading" id="modal-graph" style="height:150px"></div></div>
-    <div class="modal-links">
-      <a href="https://polytoria.com/store/${item.id}" target="_blank" class="btn btn-primary" style="text-decoration:none;flex:1;justify-content:center">View on Polytoria</a>
-      <a href="https://polytoria.trade/store/${item.id}" target="_blank" class="btn btn-ghost" style="text-decoration:none">polytoria.trade ↗</a>
-    </div>`;
-}
-
-function renderModalFull(item,content,cc,graphData,ownersData,historyData){
+function renderModalFull(item,content,cc,graphData,ownersData){
   const bg=getBgCls(cc);
   const demand=item?.stats?.demand||"";
   const trend=item?.stats?.trend||"";
@@ -794,25 +771,45 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 // ── Item picker for trade ads ──
 async function addItem(side){
   const inp=document.getElementById(side+"-input");
-  const id=inp.value.trim();
-  const errEl=document.getElementById("trade-err");
-  if(!id){showErr("Enter an item ID.");return;}
+  const rawId=inp.value.trim();
+  if(!rawId){showErr("Enter an item ID.");return;}
+  const id=rawId.replace(/\D/g,""); // strip non-digits
+  if(!id){showErr("Item ID must be a number.");return;}
   const list=side==="offer"?offerItems:wantItems;
-  if(list.find(i=>String(i.id)===String(id))){showErr("Already added.");return;}
-  inp.disabled=true;errEl.style.display="none";
+  if(list.find(i=>String(i.id)===id)){showErr("Already added.");return;}
+
+  // check cache first
+  if(itemCache[id]){
+    list.push(itemCache[id]);
+    renderChips(side);
+    inp.value="";
+    showErr("");
+    return;
+  }
+
+  inp.disabled=true;
+  showErr("");
+  const btn=document.getElementById(side+"-add");
+  btn.textContent="…";
   try{
-    // Search by ID
-    const j=await apiFetch("getItemsByPage?batch=1",{"0":{page:1,total:1,search:String(id),homepage:false}});
+    // Search by ID - use id as search query with enough results to find it
+    const j=await apiFetch("getItemsByPage?batch=1",{"0":{page:1,total:24,search:id,homepage:false}});
     const data=j[0].result.data;
     if(allTags.length===0&&data.allTags) allTags=data.allTags;
-    const item=(data.items||[]).find(i=>String(i.id)===String(id));
-    if(!item){showErr(`Item ID ${id} not found.`);return;}
+    // Try exact ID match first
+    let item=(data.items||[]).find(i=>String(i.id)===id);
+    if(!item){
+      // Search didn't return it by ID - try fetching page 1 with a broader search won't work
+      // so tell user item not found
+      showErr(`No item with ID ${id} found. Double-check the ID on polytoria.com.`);
+      return;
+    }
     itemCache[item.id]=item;
     list.push(item);
     renderChips(side);
     inp.value="";
   }catch(e){showErr("Error: "+e.message);}
-  finally{inp.disabled=false;inp.focus();}
+  finally{inp.disabled=false;btn.textContent="Add";}
 }
 
 function showErr(m){const e=document.getElementById("trade-err");e.textContent=m;e.style.display=m?"":"none";}
