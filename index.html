@@ -444,7 +444,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
         <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>
         <span style="color:var(--accent2)">Poly</span><span style="color:var(--txt)">Value</span>
       </div>
-      <div class="footer-sub">The best way to track Polytoria limited values, demand, and trades. Built by annul</div>
+      <div class="footer-sub">The best way to track Polytoria limited values, demand, and trades. Built by the community.</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <div class="footer-links">
@@ -854,7 +854,7 @@ function renderModal(item,content,cc,graphPts,owners,recent,listing){
         Owners <span class="gpill">${owners.length}</span>
       </div>
       <div class="own-row">${owners.slice(0,12).map(o=>`
-        <div class="own-chip" onclick="lookupPlayer('${esc(String(o.username||""))}')">
+        <div class="own-chip" title="View profile" onclick="closeModal();document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelector('[data-page=players]').classList.add('active');document.getElementById('page-players').classList.add('active');lookupPlayer('${esc(String(o.username||o.id||""))}')">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--txt3)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
           <span>${esc(o.username||"User "+o.id)}</span>
           ${o.serials?.length?`<span style="color:var(--gold);font-family:'Space Mono';font-size:9px">#${o.serials.slice(0,3).join(" #")}${o.serials.length>3?" +":""}
@@ -1226,7 +1226,13 @@ window.lookupPlayer=async function(q){
       ${u.registeredAt?`<div class="sbox"><div class="sval" style="font-size:12px">${new Date(u.registeredAt).toLocaleDateString("en-US",{month:"short",year:"numeric"})}</div><div class="slbl">Joined</div></div>`:""}
       ${u.lastSeenAt?`<div class="sbox"><div class="sval" style="font-size:12px">${new Date(u.lastSeenAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div><div class="slbl">Last Seen</div></div>`:""}
     </div>`:""}
-    ${u?`<a href="https://polytoria.com/users/${uid}" target="_blank" class="btn btn-p" style="text-decoration:none;width:100%;justify-content:center;margin-bottom:16px">View on Polytoria</a>`:""}
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <a href="https://polytoria.com/users/${uid}" target="_blank" class="btn btn-p" style="text-decoration:none;flex:1;justify-content:center">View Profile</a>
+      <a href="https://polytoria.com/trade/new/${uid}" target="_blank" class="btn" style="text-decoration:none;flex:1;justify-content:center;background:var(--green);color:#fff;border-color:var(--green)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Trade
+      </a>
+    </div>
     <div id="inv-wrap">
       <div style="font-size:12px;color:var(--txt3);display:flex;align-items:center;gap:8px">
         <div class="spinner" style="margin:0;width:14px;height:14px;border-width:2px"></div>
@@ -1245,128 +1251,92 @@ async function scanPlayerInventory(uid, username){
   const wrap=document.getElementById("inv-wrap");
   if(!wrap) return;
 
-  const lowerName=username.toLowerCase();
   if(!allItemsFlat.length) await preloadItems();
 
-  const ownedMap=new Map(); // itemId -> {item, serials[]}
-  let scanned=0;
-
-  function setProgress(msg, found){
+  function setProgress(msg){
     const w=document.getElementById("inv-wrap");
     if(!w) return;
-    w.innerHTML=`<div style="font-size:12px;color:var(--txt3);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    w.innerHTML=`<div style="font-size:12px;color:var(--txt3);display:flex;align-items:center;gap:10px">
       <div class="spinner" style="margin:0;width:14px;height:14px;border-width:2px"></div>
       <span>${msg}</span>
-      ${found?`<span style="color:var(--green);font-weight:600">&#10003; ${found} found so far</span>`:""}
     </div>`;
   }
 
-  // ── Phase 1: search polytoria.trade by username ──
-  // getItemsByPage may support an "owner" param — try it
-  setProgress("Searching by username...", 0);
+  setProgress("Fetching inventory from polytoria.trade…");
+
+  const ownedMap=new Map(); // itemId -> {item, serials[]}
+
   try{
-    // Try fetching items filtered by owner username across all pages
-    for(let pg=1;pg<=20;pg++){
-      const body={"0":{page:pg,total:24,search:username,homepage:false}};
-      const r=await fetch(T+"getItemsByPage?batch=1",{
-        method:"POST",headers:{"content-type":"application/json"},
-        body:JSON.stringify(body)
-      });
-      const j=await r.json();
-      const data=j[0]?.result?.data||{};
-      const items=data.items||[];
-      if(!items.length) break;
-      // These search results are by item name, not owner — won't help directly
-      // But we get them in cache for free
-      items.forEach(i=>{ if(!itemCache[i.id]) itemCache[i.id]=i; });
-      if(pg>=data.totalPages) break;
-    }
-  }catch(e){}
+    // ── Fast path: getUsersLatestHistory returns full inventory in one call ──
+    const input=encodeURIComponent(JSON.stringify({"0":Number(uid)}));
+    const r=await fetch(T+"getUsersLatestHistory?batch=1&input="+input,
+      {headers:{"content-type":"application/json"}});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const j=await r.json();
 
-  // ── Phase 2: scan all items' owner lists ──
-  // For items with few owners (<=200 stock) getAllItemOwners returns complete list
-  // For high-stock items it may be truncated — we note those separately
-  const highStock=[]; // items where owners list might be truncated
+    // Response shape: [{result:{data:[{itemId, serial, ...}, ...]}}]
+    const history=j[0]?.result?.data||[];
 
-  setProgress(`Scanning ${allItemsFlat.length} items...`, 0);
+    // Build a set of tracked item IDs for fast lookup
+    const trackedIds=new Set(allItemsFlat.map(i=>String(i.id)));
 
-  async function checkItem(item){
-    if(item._ownersFetched){
-      const match=item._ownersList?.find(o=>
-        (o.username||"").toLowerCase()===lowerName ||
-        (uid&&String(o.id)===String(uid))
-      );
-      if(match) ownedMap.set(item.id,{item,serials:match.serials||[]});
-      scanned++;
-      return;
-    }
-    try{
-      const input=encodeURIComponent(JSON.stringify({"0":Number(item.id),"1":Number(item.id)}));
-      const r=await fetch(T+"getAllItemOwners,getRecentItemHistory?batch=1&input="+input+"&itemid="+item.id,
-        {headers:{"content-type":"application/json"}});
-      if(!r.ok){scanned++;return;}
-      const j=await r.json();
-      const owners=j[0]?.result?.data||[];
-      item._ownersFetched=true;
-      item._ownersList=owners;
-      item._ownerNames=owners.map(o=>(o.username||"").toLowerCase());
-      item._ownerSerials={};
-      owners.forEach(o=>{
-        const k=(o.username||"").toLowerCase();
-        if(k) item._ownerSerials[k]=o.serials||[];
-        if(o.id) item._ownerSerials[String(o.id)]=o.serials||[];
-      });
-      itemCache[item.id]=item;
-      const idx=allItemsFlat.findIndex(x=>x.id===item.id);
-      if(idx>=0) allItemsFlat[idx]=item;
-
-      const match=owners.find(o=>
-        (o.username||"").toLowerCase()===lowerName ||
-        (uid&&String(o.id)===String(uid))
-      );
-      if(match){
-        ownedMap.set(item.id,{item,serials:match.serials||[]});
-      } else if(item.stock>200||owners.length>=50){
-        // Might be truncated — flag for deeper check
-        highStock.push(item);
+    // Group by itemId — a user can own multiple serials of the same item
+    for(const entry of history){
+      const itemId=String(entry.itemId||entry.item_id||entry.id||"");
+      if(!itemId || !trackedIds.has(itemId)) continue;
+      const item=allItemsFlat.find(i=>String(i.id)===itemId);
+      if(!item) continue;
+      const serial=entry.serial||entry.serialNumber||null;
+      if(ownedMap.has(itemId)){
+        if(serial) ownedMap.get(itemId).serials.push(serial);
+      } else {
+        ownedMap.set(itemId,{item, serials:serial?[serial]:[]});
       }
-    }catch(e){}
-    scanned++;
-  }
+    }
 
-  const BATCH=6;
-  for(let i=0;i<allItemsFlat.length;i+=BATCH){
-    if(!document.getElementById("inv-wrap")) return;
-    await Promise.all(allItemsFlat.slice(i,i+BATCH).map(checkItem));
-    if(i%30===0) setProgress(`Scanning ${scanned}/${allItemsFlat.length}...`, ownedMap.size||0);
-  }
+    // If getUsersLatestHistory returned nothing useful, fall back to owner scan
+    if(!history.length){
+      throw new Error("empty history, falling back");
+    }
 
-  // ── Phase 3: deep check high-stock items via recentItemHistory ──
-  // recentItemHistory shows recent trades — search for this username in there
-  if(highStock.length){
-    setProgress(`Checking ${highStock.length} high-stock items...`, ownedMap.size||0);
-    for(let i=0;i<highStock.length;i+=BATCH){
+  } catch(fallbackErr){
+    // ── Fallback: scan item owner lists ──
+    setProgress(`Scanning ${allItemsFlat.length} items…`);
+    const lowerName=username.toLowerCase();
+    let scanned=0;
+    const BATCH=6;
+
+    async function checkItem(item){
+      if(item._ownersFetched){
+        const m=item._ownersList?.find(o=>(o.username||"").toLowerCase()===lowerName||(uid&&String(o.id)===String(uid)));
+        if(m) ownedMap.set(String(item.id),{item,serials:m.serials||[]});
+        scanned++; return;
+      }
+      try{
+        const inp=encodeURIComponent(JSON.stringify({"0":Number(item.id),"1":Number(item.id)}));
+        const r=await fetch(T+"getAllItemOwners,getRecentItemHistory?batch=1&input="+inp+"&itemid="+item.id,
+          {headers:{"content-type":"application/json"}});
+        if(!r.ok){scanned++;return;}
+        const j=await r.json();
+        const owners=j[0]?.result?.data||[];
+        item._ownersFetched=true; item._ownersList=owners;
+        item._ownerNames=owners.map(o=>(o.username||"").toLowerCase());
+        item._ownerSerials={};
+        owners.forEach(o=>{
+          const k=(o.username||"").toLowerCase();
+          if(k) item._ownerSerials[k]=o.serials||[];
+          if(o.id) item._ownerSerials[String(o.id)]=o.serials||[];
+        });
+        const m=owners.find(o=>(o.username||"").toLowerCase()===lowerName||(uid&&String(o.id)===String(uid)));
+        if(m) ownedMap.set(String(item.id),{item,serials:m.serials||[]});
+      }catch(e){}
+      scanned++;
+    }
+
+    for(let i=0;i<allItemsFlat.length;i+=BATCH){
       if(!document.getElementById("inv-wrap")) return;
-      const batch=highStock.slice(i,i+BATCH);
-      await Promise.all(batch.map(async item=>{
-        if(ownedMap.has(item.id)) return;
-        try{
-          // Check if user appears in recent history (recent buyers/sellers)
-          const input=encodeURIComponent(JSON.stringify({"0":Number(item.id),"1":Number(item.id)}));
-          const r=await fetch(T+"getAllItemOwners,getRecentItemHistory?batch=1&input="+input+"&itemid="+item.id,
-            {headers:{"content-type":"application/json"}});
-          const j=await r.json();
-          const history=j[1]?.result?.data||[];
-          // recentItemHistory: [{serial, username, userId, created_at}]
-          const histMatch=history.find(h=>
-            (h.username||"").toLowerCase()===lowerName ||
-            (uid&&String(h.userId)===String(uid))
-          );
-          if(histMatch){
-            ownedMap.set(item.id,{item,serials:[histMatch.serial].filter(Boolean)});
-          }
-        }catch(e){}
-      }));
+      await Promise.all(allItemsFlat.slice(i,i+BATCH).map(checkItem));
+      if(i%30===0) setProgress(`Scanning ${scanned}/${allItemsFlat.length}… (${ownedMap.size} found)`);
     }
   }
 
