@@ -1282,22 +1282,58 @@ async function scanPlayerInventory(uid, username){
   const ownedMap=new Map(); // itemId -> {item, serials[]}
 
   try{
-    // ── Fast path: getUsersLatestHistory returns full inventory in one call ──
-    const input=encodeURIComponent(JSON.stringify({"0":Number(uid)}));
-    const r=await fetch(T+"getUsersLatestHistory?batch=1&input="+input,
-      {headers:{"content-type":"application/json"}});
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    const j=await r.json();
+    // ── Paginated getUsersLatestHistory — keep fetching until no more pages ──
+    // Try page-based pagination: input {"0": {userId, page}} or {"0": userId, "1": page}
+    const history=[];
+    let page=1;
+    let inputShape=null; // auto-detect on first call
 
-    // Response shape: [{result:{data:[{itemId, serial, ...}, ...]}}]
-    const history=j[0]?.result?.data||[];
-    if(history.length){
-      console.log("getUsersLatestHistory total entries:", history.length);
-      console.log("sample[0]:", JSON.stringify(history[0]));
-      console.log("sample[1]:", JSON.stringify(history[1]));
-      const uniqueItemIds=new Set(history.map(e=>e.itemId||e.item_id||e.item?.id||e.id||"?"));
-      console.log("unique item IDs in history:", uniqueItemIds.size, [...uniqueItemIds].slice(0,10));
+    while(true){
+      setProgress(`Loading inventory… (page ${page})`);
+      // First try nested {userId, page}, fallback to flat id with page param
+      let input;
+      if(inputShape===null || inputShape==="nested"){
+        input=encodeURIComponent(JSON.stringify({"0":{userId:Number(uid),page}}));
+      } else {
+        input=encodeURIComponent(JSON.stringify({"0":Number(uid),"1":page}));
+      }
+      const r=await fetch(T+"getUsersLatestHistory?batch=1&input="+input,
+        {headers:{"content-type":"application/json"}});
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      const j=await r.json();
+      const page_data=j[0]?.result?.data||[];
+
+      if(page===1){
+        console.log("page1 input shape tested:", inputShape||"nested");
+        console.log("page1 got entries:", page_data.length);
+        if(page_data.length) console.log("sample:", JSON.stringify(page_data[0]));
+        else console.log("raw response:", JSON.stringify(j[0]?.result));
+        // If nested got 0, try flat on page 1
+        if(!page_data.length && inputShape===null){
+          inputShape="flat";
+          const input2=encodeURIComponent(JSON.stringify({"0":Number(uid),"1":1}));
+          const r2=await fetch(T+"getUsersLatestHistory?batch=1&input="+input2,
+            {headers:{"content-type":"application/json"}});
+          const j2=await r2.json();
+          const d2=j2[0]?.result?.data||[];
+          console.log("flat shape got:", d2.length, "entries");
+          if(d2.length) { history.push(...d2); if(d2.length<20) break; page++; continue; }
+          // Both failed — throw to fallback
+          throw new Error("no data from either input shape");
+        }
+        if(!page_data.length && inputShape==="nested"){
+          inputShape="flat"; page=1; continue;
+        }
+        if(page_data.length) inputShape=inputShape||"nested";
+      }
+
+      if(!page_data.length) break;
+      history.push(...page_data);
+      if(page_data.length < 20) break;
+      page++;
+      if(page > 50) break;
     }
+    console.log("getUsersLatestHistory TOTAL:", history.length, "unique items:", new Set(history.map(e=>e.itemId||e.item?.id||e.id)).size);
 
     // Extract username from first history entry if available
     if(history.length){
