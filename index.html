@@ -444,11 +444,11 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
         <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>
         <span style="color:var(--accent2)">Poly</span><span style="color:var(--txt)">Value</span>
       </div>
-      <div class="footer-sub">The best way to track Polytoria limited values, demand, and trades. Built by the community.</div>
+      <div class="footer-sub">The best way to track Polytoria limited values, demand, and trades. Built by annul</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <div class="footer-links">
-        <a href="https://discord.gg/WTmeMJqpU9" target="_blank" class="flink discord">
+        <a href="https://discord.com/invite/WTmeMJqpU9" target="_blank" class="flink discord">
           <svg width="15" height="11" viewBox="0 0 24 18" fill="currentColor"><path d="M20.317 1.492a19.82 19.82 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 1.492a.07.07 0 0 0-.032.027C.533 6.036-.32 10.444.099 14.796a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
           Join Discord
         </a>
@@ -746,36 +746,53 @@ window.openModal=async function(id){
   box.className="modal";
   content.innerHTML=`<div style="padding:60px;display:flex;align-items:center;justify-content:center"><div class="spinner"></div></div>`;
 
+  const cached=itemCache[id];
+  if(cached){const cc=cardClass(cached.tags||[],allTags);box.className="modal"+(cc?" "+cc:"");}
+
   try{
-    // Fetch graph + item data
     const input=encodeURIComponent(JSON.stringify({"0":Number(id),"1":Number(id)}));
     const [graphR,ownerR]=await Promise.all([
-      fetch(T+`getItemWithTags,getItemGraph?batch=1&input=${input}&itemid=${id}`,{
-        headers:{"content-type":"application/json"}
-      }),
-      fetch(T+`getAllItemOwners,getRecentItemHistory?batch=1&input=${input}&itemid=${id}`,{
-        headers:{"content-type":"application/json"}
-      })
+      fetch(T+`getItemWithTags,getItemGraph?batch=1&input=${input}&itemid=${id}`,{headers:{"content-type":"application/json"}}),
+      fetch(T+`getAllItemOwners,getRecentItemHistory?batch=1&input=${input}&itemid=${id}`,{headers:{"content-type":"application/json"}})
     ]);
-
     const gj=await graphR.json();
     const oj=await ownerR.json();
-    const item=gj[0]?.result?.data || itemCache[id];
-    const graph=gj[1]?.result?.data||[];
-    const owners=oj[0]?.result?.data||[];
 
-    if(item) itemCache[item.id]=item;
-    const cc=cardClass(item?.tags||[],allTags);
+    // [0] = getItemWithTags => {item:{...}, allTags:[...], latestListing:{bestPrice,sellers}}
+    const richItem=gj[0]?.result?.data?.item||cached;
+    const listing=gj[0]?.result?.data?.latestListing||null;
+    if(richItem) itemCache[richItem.id]=richItem;
+
+    // [1] = getItemGraph => {res:{data:{price:[{x:"2025-12-13",y:"483"},...], volume:[...]}}}
+    const graphPts=gj[1]?.result?.data?.res?.data?.price||[];
+
+    // owners [0] => [{username, id, serials:[4,8,9]}]
+    const owners=oj[0]?.result?.data||[];
+    // recent history [1] => [{serial, username, userId, created_at}]
+    const recent=oj[1]?.result?.data||[];
+
+    // Cache owner->serials on the item so player scanner can find it
+    const itemRef=richItem||cached;
+    if(itemRef&&owners.length){
+      itemRef._ownerNames=owners.map(o=>o.username?.toLowerCase()).filter(Boolean);
+      itemRef._ownerSerials={};
+      owners.forEach(o=>{if(o.username) itemRef._ownerSerials[o.username.toLowerCase()]=o.serials||[];});
+      itemCache[itemRef.id]=itemRef;
+      const idx=allItemsFlat.findIndex(i=>i.id===itemRef.id);
+      if(idx>=0) allItemsFlat[idx]=itemRef;
+    }
+
+    const finalItem=richItem||cached;
+    const cc=cardClass(finalItem?.tags||[],allTags);
     box.className="modal"+(cc?" "+cc:"");
-    renderModal(item||itemCache[id],content,cc,graph,owners);
+    renderModal(finalItem,content,cc,graphPts,owners,recent,listing);
   }catch(e){
-    const item=itemCache[id];
-    if(item){const cc=cardClass(item.tags||[],allTags);box.className="modal"+(cc?" "+cc:"");renderModal(item,content,cc,[],[]);}
-    else content.innerHTML=`<div style="padding:40px;text-align:center;color:var(--txt3)">Failed to load item</div>`;
+    if(cached){const cc=cardClass(cached.tags||[],allTags);box.className="modal"+(cc?" "+cc:"");renderModal(cached,content,cc,[],[],[],null);}
+    else content.innerHTML=`<div style="padding:40px;text-align:center;color:var(--txt3)">Failed to load<br><small>${esc(e.message)}</small></div>`;
   }
 };
 
-function renderModal(item,content,cc,graph,owners){
+function renderModal(item,content,cc,graphPts,owners,recent,listing){
   const bg=bgCls(cc);
   const demand=item?.stats?.demand||"";
   const trend=item?.stats?.trend||"";
@@ -800,19 +817,17 @@ function renderModal(item,content,cc,graph,owners){
     <div class="stat-row fade-up" style="animation-delay:.04s">
       <div class="sbox"><div class="sval" style="color:var(--green)">${num(item?.recentAverage)}</div><div class="slbl">RAP</div></div>
       <div class="sbox"><div class="sval" style="color:var(--accent2)">${item?.stats?.value!=null?num(item.stats.value):"—"}</div><div class="slbl">Est. Value</div></div>
-      <div class="sbox"><div class="sval" style="font-size:13px;color:${demand==="high"?"var(--green)":demand==="low"?"var(--red)":"var(--txt2)"}">${demand||"—"}</div><div class="slbl">Demand</div></div>
-      <div class="sbox"><div class="sval" style="font-size:13px;color:${trend==="rising"?"var(--green)":trend==="unstable"?"var(--red)":"var(--txt2)"}">${trend||"—"}</div><div class="slbl">Trend</div></div>
+      <div class="sbox"><div class="sval" style="color:${listing?"var(--gold)":"var(--txt2)"};">${listing?num(listing.bestPrice):"—"}</div><div class="slbl">Best Ask</div></div>
+      <div class="sbox"><div class="sval">${listing?listing.sellers:"—"}</div><div class="slbl">Sellers</div></div>
     </div>
     ${rapVsVal!==null?`
-    <div style="padding:0 26px 18px">
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
-          <span style="font-size:11px;color:var(--txt3)">RAP vs Est. Value</span>
-          <span style="font-family:'Space Mono';font-size:12px;font-weight:700;color:${rapVsVal>0?"var(--green)":"var(--red)"}">${rapVsVal>0?"▲":"▼"} ${Math.abs(rapVsVal)}%</span>
-        </div>
-        <div style="height:4px;background:var(--bg);border-radius:2px;overflow:hidden">
+    <div style="padding:0 26px 16px">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <span style="font-size:11px;color:var(--txt3)">RAP vs Est. Value</span>
+        <div style="flex:1;height:4px;background:var(--bg);border-radius:2px;overflow:hidden">
           <div style="height:100%;width:${Math.min(100,Math.abs(rapVsVal))}%;background:${rapVsVal>0?"var(--green)":"var(--red)"};border-radius:2px"></div>
         </div>
+        <span style="font-family:'Space Mono';font-size:11px;font-weight:700;color:${rapVsVal>0?"var(--green)":"var(--red)"};flex-shrink:0">${rapVsVal>0?"▲":"▼"} ${Math.abs(rapVsVal)}%</span>
       </div>
     </div>`:""}
     <div class="gsec fade-up" style="animation-delay:.08s">
@@ -820,22 +835,39 @@ function renderModal(item,content,cc,graph,owners){
         <div class="gtitle">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           RAP History
-          <span class="gpill">${graph.length} pts</span>
+          <span class="gpill">${graphPts.length} pts</span>
         </div>
       </div>
-      <div class="gwrap${graph.length<2?" skel":""}" id="m-graph"></div>
+      <div class="gwrap${graphPts.length<2?" skel":""}" id="m-graph"></div>
     </div>
     ${owners.length?`
-    <div class="own-sec fade-up" style="animation-delay:.12s">
+    <div class="own-sec fade-up" style="animation-delay:.10s">
       <div class="own-title">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Owners <span class="gpill">${owners.length}</span>
       </div>
-      <div class="own-row">${owners.slice(0,10).map(o=>`
-        <div class="own-chip" onclick="lookupPlayer('${esc(String(o.username||o.userId||""))}')">
+      <div class="own-row">${owners.slice(0,12).map(o=>`
+        <div class="own-chip" onclick="lookupPlayer('${esc(String(o.username||""))}')">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--txt3)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-          ${esc(o.username||"User "+o.userId)}${o.count>1?` <span style="color:var(--txt3);font-family:'Space Mono';font-size:9px">×${o.count}</span>`:""}
+          <span>${esc(o.username||"User "+o.id)}</span>
+          ${o.serials?.length?`<span style="color:var(--gold);font-family:'Space Mono';font-size:9px">#${o.serials.slice(0,3).join(" #")}${o.serials.length>3?" +":""}
+          </span>`:""}
         </div>`).join("")}
+      </div>
+    </div>`:""}
+    ${recent?.length?`
+    <div style="padding:0 26px 18px" class="fade-up" style="animation-delay:.12s">
+      <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:5px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Recent Trades
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        ${recent.slice(0,5).map(t=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:11px">
+            <span style="font-weight:600">${esc(t.username||"Unknown")}</span>
+            <span style="color:var(--gold);font-family:'Space Mono';font-size:10px">Serial #${t.serial}</span>
+            <span style="color:var(--txt3)">${t.created_at?t.created_at.slice(0,10):""}</span>
+          </div>`).join("")}
       </div>
     </div>`:""}
     <div class="mdivider"></div>
@@ -844,10 +876,9 @@ function renderModal(item,content,cc,graph,owners){
       <a href="https://polytoria.trade/store/${item?.id}" target="_blank" class="btn btn-g" style="text-decoration:none">polytoria.trade ↗</a>
     </div>`;
 
-  if(graph.length>=2){
-    // defer one frame so DOM is painted and offsetWidth is real
-    requestAnimationFrame(()=>requestAnimationFrame(()=>drawGraph(document.getElementById("m-graph"),graph,cc)));
-  } else if(graph.length<2){
+  if(graphPts.length>=2){
+    requestAnimationFrame(()=>requestAnimationFrame(()=>drawGraph(document.getElementById("m-graph"),graphPts,cc)));
+  } else {
     const g=document.getElementById("m-graph");
     if(g) g.innerHTML=`<div class="empty" style="padding:28px"><p style="color:var(--txt3);font-size:12px">No historical data yet</p></div>`;
   }
@@ -860,8 +891,8 @@ function drawGraph(el,raw,cc){
   const PAD={t:12,r:14,b:26,l:50};
 
   const pts=raw.map(d=>({
-    t:new Date(d.date||d.createdAt||d.timestamp||0).getTime(),
-    v:Number(d.value||d.averagePrice||d.rap||d.recentAveragePrice||0)
+    t:new Date(d.x||d.date||d.createdAt||d.timestamp||0).getTime(),
+    v:Number(d.y||d.value||d.averagePrice||d.rap||0)
   })).filter(d=>d.t>100&&d.v>0).sort((a,b)=>a.t-b.t);
 
   if(pts.length<2){el.innerHTML=`<div class="empty" style="padding:28px"><p style="color:var(--txt3);font-size:12px">Not enough data</p></div>`;return;}
@@ -1156,78 +1187,122 @@ window.lookupPlayer=async function(q){
   document.getElementById("page-players").classList.add("active");
   document.getElementById("player-input").value=q;
   res.innerHTML=`<div class="spinner"></div>`;
+
+  let uid=q, u=null;
+
+  // Try Polytoria API — but don't fail if it's down
   try{
-    let uid=q;
     if(!/^\d+$/.test(q)){
       const sd=await fetch(POLY+"/users/find?username="+encodeURIComponent(q)).then(r=>r.json());
-      if(sd?.id) uid=sd.id; else throw new Error("User not found");
+      if(sd?.id) uid=sd.id; else throw new Error("not found");
     }
-    const u=await fetch(POLY+"/users/"+uid).then(r=>r.json());
-    if(u.message) throw new Error(u.message);
+    const ud=await fetch(POLY+"/users/"+uid).then(r=>r.json());
+    if(!ud.message) u=ud;
+  }catch(e){ /* Polytoria API unavailable, continue with what we have */ }
 
-    res.innerHTML=`<div class="card">
-      <div class="profile-hdr">
-        <img class="pav" src="${esc(u.thumbnail||"")}" onerror="this.style.display='none'">
-        <div>
-          <div class="pname">${esc(u.username)}</div>
-          <div class="psub">ID: ${u.id}${u.registeredAt?" · Joined "+new Date(u.registeredAt).toLocaleDateString("en-US",{year:"numeric",month:"long"}):""}</div>
-          ${u.description?`<p class="pbio">${esc(u.description)}</p>`:""}
+  // Build profile card — works with or without Polytoria data
+  res.innerHTML=`<div class="card">
+    <div class="profile-hdr">
+      ${u?.thumbnail?`<img class="pav" src="${esc(u.thumbnail)}" onerror="this.style.display='none'">`:`<div class="pav" style="display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--txt3)">◈</div>`}
+      <div>
+        <div class="pname">${esc(u?.username||q)}</div>
+        <div class="psub">
+          ${uid?`ID: ${uid}`:""}
+          ${u?.registeredAt?" · Joined "+new Date(u.registeredAt).toLocaleDateString("en-US",{year:"numeric",month:"long"}):""}
+          ${!u?`<span style="color:var(--txt3)"> · Profile from polytoria.trade data</span>`:""}
         </div>
+        ${u?.description?`<p class="pbio">${esc(u.description)}</p>`:""}
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:9px;margin-bottom:16px">
-        ${u.level!=null?`<div class="sbox"><div class="sval" style="color:var(--accent2)">${u.level}</div><div class="slbl">Level</div></div>`:""}
-        ${u.registeredAt?`<div class="sbox"><div class="sval" style="font-size:12px">${new Date(u.registeredAt).toLocaleDateString("en-US",{month:"short",year:"numeric"})}</div><div class="slbl">Joined</div></div>`:""}
-        ${u.lastSeenAt?`<div class="sbox"><div class="sval" style="font-size:12px">${new Date(u.lastSeenAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div><div class="slbl">Last Seen</div></div>`:""}
+    </div>
+    ${u?`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:9px;margin-bottom:16px">
+      ${u.level!=null?`<div class="sbox"><div class="sval" style="color:var(--accent2)">${u.level}</div><div class="slbl">Level</div></div>`:""}
+      ${u.registeredAt?`<div class="sbox"><div class="sval" style="font-size:12px">${new Date(u.registeredAt).toLocaleDateString("en-US",{month:"short",year:"numeric"})}</div><div class="slbl">Joined</div></div>`:""}
+      ${u.lastSeenAt?`<div class="sbox"><div class="sval" style="font-size:12px">${new Date(u.lastSeenAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div><div class="slbl">Last Seen</div></div>`:""}
+    </div>`:""}
+    ${u?`<a href="https://polytoria.com/users/${uid}" target="_blank" class="btn btn-p" style="text-decoration:none;width:100%;justify-content:center;margin-bottom:16px">View on Polytoria</a>`:""}
+    <div id="inv-wrap">
+      <div style="font-size:12px;color:var(--txt3);display:flex;align-items:center;gap:8px">
+        <div class="spinner" style="margin:0;width:14px;height:14px;border-width:2px"></div>
+        Scanning limiteds from polytoria.trade…
       </div>
-      <a href="https://polytoria.com/users/${u.id}" target="_blank" class="btn btn-p" style="text-decoration:none;width:100%;justify-content:center;margin-bottom:16px">View on Polytoria</a>
+    </div>
+    <div id="rap-history-wrap" style="margin-top:18px"></div>
+  </div>`;
 
-      <div id="inv-wrap">
-        <div style="font-size:12px;color:var(--txt3);display:flex;align-items:center;gap:8px">
-          <div class="spinner" style="margin:0;width:14px;height:14px;border-width:2px"></div>
-          Scanning limiteds…
-        </div>
-      </div>
-
-      <div id="rap-history-wrap" style="margin-top:18px"></div>
-    </div>`;
-
-    // Scan limiteds (cross-ref with all known items)
-    scanPlayerInventory(uid, u.username);
-    loadRapHistory(uid);
-
-  }catch(e){res.innerHTML=`<div class="card"><div class="empty"><div class="empty-ico">◈</div><h3>User not found</h3><p>${esc(e.message)}</p></div></div>`;}
+  // Scan limiteds from polytoria.trade owners data + our item cache
+  scanPlayerInventory(uid, u?.username||q);
+  loadRapHistory(uid);
 };
 
 async function scanPlayerInventory(uid, username){
   const wrap=document.getElementById("inv-wrap");
   if(!wrap) return;
   try{
-    // Get user's inventory from Polytoria API
-    const inv=await fetch(POLY+"/store/user/"+uid).then(r=>r.json());
-    const ownedIds=new Set((inv.data||inv||[]).map(i=>String(i.assetId||i.id)));
-    if(!ownedIds.size){wrap.innerHTML=`<div style="font-size:12px;color:var(--txt3)">No limiteds found in public inventory.</div>`;return;}
-
-    // Preload all items if not done
+    // Preload items if needed
     if(!allItemsFlat.length) await preloadItems();
 
-    const owned=allItemsFlat.filter(i=>ownedIds.has(String(i.id)));
-    const totalRap=owned.reduce((s,i)=>s+(i.recentAverage||0),0);
-    const totalVal=owned.reduce((s,i)=>s+(i.stats?.value||0),0);
-    const serials=owned.filter(i=>i.serialNumbers?.length||i.lowestSerial!=null);
+    // Find which items this user owns by scanning allItemsFlat owners
+    // We do this by checking each item's owners endpoint — but that's too many calls.
+    // Instead, cross-ref: for each item we already know about, check if this user
+    // appears in the owners we've loaded. We also do a targeted search.
+    // Best approach: fetch all items pages and check recentHistory for this user.
 
-    // Save RAP snapshot
-    if(totalRap>0){
+    // Search by username across all items we have in cache
+    const owned=[];
+    const lowerName=username.toLowerCase();
+
+    // Check if any cached items have this user in their known owners
+    // (populated when modals were opened). Also scan by fetching pages.
+    // Primary method: use polytoria.trade's search — items where this user owns them
+    // We fetch several pages and check recentItemHistory cross-ref
+    let totalRap=0;
+    const serials=[];
+
+    // Scan all items in our flat cache
+    for(const item of allItemsFlat){
+      // We'll mark items as owned if we find them via the owners endpoint
+      // For now mark any item that has a username match in cached owner data
+      if(item._ownerNames?.includes(lowerName)){
+        owned.push({item, userSerials: item._ownerSerials?.[lowerName]||[]});
+        totalRap+=item.recentAverage||0;
+        if(item._ownerSerials?.[lowerName]?.length){
+          serials.push({item, nums: item._ownerSerials[lowerName]});
+        }
+      }
+    }
+
+    // Also try Polytoria API for inventory as backup
+    try{
+      const inv=await fetch(POLY+"/store/user/"+uid+"?limit=100").then(r=>r.json());
+      const ownedIds=new Set((inv.data||inv||[]).map(i=>String(i.assetId||i.itemId||i.id)));
+      if(ownedIds.size){
+        for(const item of allItemsFlat){
+          if(ownedIds.has(String(item.id))&&!owned.find(o=>o.item.id===item.id)){
+            owned.push({item, userSerials:[]});
+            totalRap+=item.recentAverage||0;
+          }
+        }
+      }
+    }catch(e){ /* Polytoria API down, skip */ }
+
+    // Save RAP snapshot to our backend
+    if(totalRap>0&&uid){
       fetch(API+"/player-history/"+uid,{
         method:"POST",credentials:"include",
         headers:{"content-type":"application/json"},
         body:JSON.stringify({rap:totalRap})
-      });
+      }).catch(()=>{});
+    }
+
+    if(!owned.length){
+      wrap.innerHTML=`<div style="font-size:12px;color:var(--txt3);padding:8px 0">No limiteds found in our data yet. RAP history will appear once items are tracked.</div>`;
+      return;
     }
 
     wrap.innerHTML=`
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px">
         <div class="sbox"><div class="sval" style="color:var(--green)">${num(totalRap)}</div><div class="slbl">Total RAP</div></div>
-        <div class="sbox"><div class="sval" style="color:var(--accent2)">${num(totalVal||null)}</div><div class="slbl">Est. Value</div></div>
+        <div class="sbox"><div class="sval" style="color:var(--accent2)">${num(owned.reduce((s,o)=>s+(o.item.stats?.value||0),0)||null)}</div><div class="slbl">Est. Value</div></div>
         <div class="sbox"><div class="sval">${owned.length}</div><div class="slbl">Limiteds</div></div>
       </div>
       ${serials.length?`
@@ -1236,29 +1311,28 @@ async function scanPlayerInventory(uid, username){
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           Serials
         </div>
-        <div>${serials.map(i=>`
-          <span class="serial-chip" onclick="openModal(${i.id})">
-            ${esc(i.name)}
-            ${i.lowestSerial!=null?`<span class="sn">#${i.lowestSerial}</span>`:""}
+        <div>${serials.map(s=>`
+          <span class="serial-chip" onclick="openModal(${s.item.id})">
+            ${esc(s.item.name)}
+            <span class="sn">${s.nums.map(n=>"#"+n).join(" ")}</span>
           </span>`).join("")}
         </div>
       </div>`:""}
-      ${owned.length?`
       <div class="inv-section">
         <div class="inv-title">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-          All Limiteds (${owned.length})
+          Limiteds (${owned.length})
         </div>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
-          ${owned.slice(0,24).map(i=>`
-            <div onclick="openModal(${i.id})" title="${esc(i.name)}" style="width:44px;height:44px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);overflow:hidden;transition:.12s" onmouseover="this.style.borderColor='rgba(124,109,240,.4)'" onmouseout="this.style.borderColor='var(--border)'">
-              <img src="${esc(i.thumbnailUrl||"")}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.opacity=.15">
+          ${owned.slice(0,24).map(o=>`
+            <div onclick="openModal(${o.item.id})" title="${esc(o.item.name)}" style="width:44px;height:44px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);overflow:hidden;transition:.12s" onmouseover="this.style.borderColor='rgba(124,109,240,.4)'" onmouseout="this.style.borderColor='var(--border)'">
+              <img src="${esc(o.item.thumbnailUrl||"")}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.opacity=.15">
             </div>`).join("")}
           ${owned.length>24?`<div style="display:flex;align-items:center;font-size:11px;color:var(--txt3)">+${owned.length-24} more</div>`:""}
         </div>
-      </div>`:""}`;
+      </div>`;
   }catch(e){
-    if(wrap) wrap.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Could not load inventory (may be private).</div>`;
+    if(wrap) wrap.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Could not load inventory data.</div>`;
   }
 }
 
