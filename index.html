@@ -1195,42 +1195,57 @@ window.lookupPlayer=async function(q){
   document.getElementById("player-input").value=q;
   res.innerHTML=`<div class="spinner"></div>`;
 
-  let uid=q, u=null, tradeUsername=q;
+  let uid=null, u=null, tradeUsername=q;
 
-  // Step 1: resolve username to numeric ID
-  try{
-    if(!/^\d+$/.test(q)){
-      const sd=await fetch(POLY+"/users/find?username="+encodeURIComponent(q)).then(r=>r.json());
-      if(sd?.id){ uid=sd.id; tradeUsername=sd.username||q; }
-      else throw new Error("not found");
+  // ── Resolve user entirely via polytoria.trade (no polytoria.com API calls) ──
+  // Strategy: if input is a username, find them in getAllItemOwners of any cached item.
+  // If input is a numeric ID, use it directly.
+  // Then call getUsersLatestHistory which gives us inventory + confirms the user exists.
+
+  if(/^\d+$/.test(q)){
+    // Numeric ID passed directly
+    uid=q;
+  } else {
+    // Search cached item owners for this username
+    const lowerQ=q.toLowerCase();
+    for(const item of allItemsFlat){
+      const owners=item._ownersList||[];
+      const match=owners.find(o=>(o.username||"").toLowerCase()===lowerQ);
+      if(match && match.id){ uid=String(match.id); tradeUsername=match.username||q; break; }
     }
-  }catch(e){}
-
-  // Step 2: fetch profile from polytoria.trade getUser tRPC endpoint
-  try{
-    const input=encodeURIComponent(JSON.stringify({"0":Number(uid)||uid}));
-    const td=await fetch(T+"getUser?batch=1&input="+input,{headers:{"content-type":"application/json"}}).then(r=>r.json());
-    const tu=td[0]?.result?.data;
-    if(tu && !tu.error){
-      u={
-        username: tu.username||tu.name||tradeUsername,
-        thumbnail: tu.thumbnail||tu.avatarUrl||tu.avatar||null,
-        description: tu.description||tu.bio||null,
-        level: tu.level??null,
-        registeredAt: tu.createdAt||tu.registeredAt||null,
-        lastSeenAt: tu.lastSeenAt||tu.updatedAt||null,
-      };
-      if(tu.username) tradeUsername=tu.username;
+    // If not found in cache, try fetching a broad item to find the user
+    if(!uid){
+      // Try to find via any item's owner list — fetch first few items
+      const tryItems=allItemsFlat.slice(0,5);
+      for(const item of tryItems){
+        if(item._ownersFetched) continue;
+        try{
+          const inp=encodeURIComponent(JSON.stringify({"0":Number(item.id),"1":Number(item.id)}));
+          const r=await fetch(T+"getAllItemOwners,getRecentItemHistory?batch=1&input="+inp+"&itemid="+item.id,
+            {headers:{"content-type":"application/json"}});
+          const j=await r.json();
+          const owners=j[0]?.result?.data||[];
+          item._ownersFetched=true; item._ownersList=owners;
+          const match=owners.find(o=>(o.username||"").toLowerCase()===lowerQ);
+          if(match && match.id){ uid=String(match.id); tradeUsername=match.username||q; break; }
+        }catch(e){}
+      }
     }
-  }catch(e){}
-
-  // Step 3: fall back to Polytoria API if trade didn't give us profile data
-  if(!u){
-    try{
-      const ud=await fetch(POLY+"/users/"+uid).then(r=>r.json());
-      if(!ud.message){ u=ud; if(u?.username) tradeUsername=u.username; }
-    }catch(e){}
   }
+
+  // If we still don't have a uid, show not found
+  if(!uid){
+    document.getElementById("player-result").innerHTML=
+      `<div class="card" style="padding:24px;text-align:center;color:var(--txt3)">
+        Could not find user <strong style="color:var(--txt)">${esc(q)}</strong> in polytoria.trade data.<br>
+        <span style="font-size:11px">Try searching by numeric user ID, or look up an item they own first.</span>
+      </div>`;
+    return;
+  }
+
+  // Fetch inventory via getUsersLatestHistory — this also confirms the user exists
+  // and gives us their username/id. Profile data comes from the item owners cache.
+  u = { username: tradeUsername, thumbnail: null, description: null, level: null, registeredAt: null, lastSeenAt: null };
 
   // Build profile card — works with or without Polytoria data
   res.innerHTML=`<div class="card">
@@ -1241,7 +1256,7 @@ window.lookupPlayer=async function(q){
         <div class="psub">
           ${uid?`ID: ${uid}`:""}
           ${u?.registeredAt?" · Joined "+new Date(u.registeredAt).toLocaleDateString("en-US",{year:"numeric",month:"long"}):""}
-          ${!u?`<span style="color:var(--txt3)"> · Profile from polytoria.trade data</span>`:""}
+
         </div>
         ${u?.description?`<p class="pbio">${esc(u.description)}</p>`:""}
       </div>
@@ -1301,6 +1316,18 @@ async function scanPlayerInventory(uid, username){
 
     // Response shape: [{result:{data:[{itemId, serial, ...}, ...]}}]
     const history=j[0]?.result?.data||[];
+
+    // Extract username from first history entry if available
+    if(history.length){
+      const firstEntry=history[0];
+      const resolvedName=firstEntry.username||firstEntry.user?.username||null;
+      if(resolvedName){
+        // Update displayed name in profile card
+        const pname=document.querySelector(".pname");
+        if(pname) pname.textContent=resolvedName;
+        username=resolvedName;
+      }
+    }
 
     // Build a set of tracked item IDs for fast lookup
     const trackedIds=new Set(allItemsFlat.map(i=>String(i.id)));
