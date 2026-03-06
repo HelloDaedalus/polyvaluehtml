@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PolyValue</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<title>PolyValue — Polytoria Limited Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -12,914 +12,1150 @@
   --txt:#f0f0ff;--txt2:#6e6e9a;--txt3:#3a3a58;
   --accent:#7c6df0;--accent2:#b8adff;--accent3:#5040c8;
   --green:#00e898;--red:#f06858;--gold:#ffcc55;--orange:#ff9944;--blue:#55aaff;
+  --discord:#5865f2;
   --border:#1c1c32;--radius:14px;
   --glow-rare:0 0 0 1px rgba(184,173,255,0.35),0 4px 32px rgba(124,109,240,0.2);
   --glow-hoarded:0 0 0 1px rgba(255,204,85,0.3),0 4px 32px rgba(255,170,0,0.15);
   --glow-projected:0 0 0 1px rgba(240,104,88,0.3),0 4px 32px rgba(240,80,60,0.15);
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
 
-/* ── ANIMATIONS ── */
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,232,152,0.6)}70%{box-shadow:0 0 0 6px rgba(0,232,152,0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 @keyframes popIn{0%{opacity:0;transform:scale(0.95)}100%{opacity:1;transform:scale(1)}}
-@keyframes draw-line{from{stroke-dashoffset:1000}to{stroke-dashoffset:0}}
+@keyframes draw{from{stroke-dashoffset:2000}to{stroke-dashoffset:0}}
+@keyframes dropDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 
-.fade-up{animation:fadeUp .3s cubic-bezier(.22,1,.36,1) both}
-.pop-in{animation:popIn .22s cubic-bezier(.22,1,.36,1) both}
-
-/* ── NAV ── */
-.nav{background:rgba(6,6,14,0.88);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:58px;position:sticky;top:0;z-index:100;backdrop-filter:blur(28px) saturate(1.8)}
-.nav-logo{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;margin-right:24px;display:flex;align-items:center;gap:9px;cursor:default;letter-spacing:-0.5px;user-select:none}
-.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2.8s ease infinite}
-.logo-poly{color:var(--accent2)}.logo-val{color:var(--txt)}
+/* NAV */
+.nav{background:rgba(6,6,14,0.92);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:58px;position:sticky;top:0;z-index:200;backdrop-filter:blur(28px)}
+.nav-logo{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;margin-right:20px;display:flex;align-items:center;gap:9px;user-select:none;cursor:default}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2.8s ease infinite}
+.logo-poly{color:var(--accent2)}.logo-v{color:var(--txt)}
 .nav-tabs{display:flex;gap:2px}
-.nav-tab{padding:7px 15px;border-radius:9px;font-size:13px;font-weight:500;color:var(--txt2);cursor:pointer;transition:.15s all;border:none;background:none;font-family:inherit;display:flex;align-items:center;gap:6px}
-.nav-tab:hover{color:var(--txt);background:var(--bg3)}
-.nav-tab.active{color:var(--accent2);background:rgba(124,109,240,0.1);box-shadow:inset 0 0 0 1px rgba(124,109,240,0.18)}
-.nav-tab svg{opacity:.6;transition:.15s}
-.nav-tab.active svg,.nav-tab:hover svg{opacity:1}
+.ntab{padding:7px 14px;border-radius:9px;font-size:13px;font-weight:500;color:var(--txt2);cursor:pointer;border:none;background:none;font-family:inherit;display:flex;align-items:center;gap:6px;transition:.15s}
+.ntab:hover{color:var(--txt);background:var(--bg3)}
+.ntab.active{color:var(--accent2);background:rgba(124,109,240,0.1);box-shadow:inset 0 0 0 1px rgba(124,109,240,0.18)}
+.ntab svg{opacity:.55;transition:.15s}.ntab.active svg,.ntab:hover svg{opacity:1}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.search-wrap{position:relative}
-.search-wrap input{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 14px 8px 36px;color:var(--txt);font-size:13px;width:230px;outline:none;font-family:inherit;transition:.2s all}
-.search-wrap input:focus{border-color:rgba(124,109,240,0.5);width:290px;background:var(--bg4);box-shadow:0 0 0 3px rgba(124,109,240,0.08)}
-.search-wrap input::placeholder{color:var(--txt3)}
-.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--txt3);pointer-events:none}
 
-/* ── LAYOUT ── */
+/* Global search with preview */
+.gsearch-wrap{position:relative}
+.gsearch{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 14px 8px 36px;color:var(--txt);font-size:13px;width:240px;outline:none;font-family:inherit;transition:.2s}
+.gsearch:focus{border-color:rgba(124,109,240,0.45);width:300px;background:var(--bg4);box-shadow:0 0 0 3px rgba(124,109,240,0.07)}
+.gsearch::placeholder{color:var(--txt3)}
+.gsi{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--txt3);pointer-events:none}
+.search-preview{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:300;overflow:hidden;display:none;animation:dropDown .15s ease}
+.search-preview.show{display:block}
+.sp-item{display:flex;align-items:center;gap:10px;padding:9px 13px;cursor:pointer;transition:.12s}
+.sp-item:hover{background:var(--bg3)}
+.sp-item img{width:36px;height:36px;border-radius:7px;object-fit:contain;background:var(--bg3);flex-shrink:0;padding:2px}
+.sp-item-info{min-width:0;flex:1}
+.sp-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-rap{font-size:10px;color:var(--green);font-family:'Space Mono',monospace}
+.sp-more{padding:8px 13px;font-size:11px;color:var(--txt3);border-top:1px solid var(--border);text-align:center;cursor:pointer;transition:.12s}
+.sp-more:hover{color:var(--accent2);background:var(--bg3)}
+
+/* Auth button */
+.discord-btn{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:9px;background:var(--discord);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
+.discord-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.discord-btn.out{background:var(--bg3);color:var(--txt2);border:1px solid var(--border)}
+.discord-btn.out:hover{color:var(--txt);background:var(--bg4)}
+.user-pill{display:flex;align-items:center;gap:7px;padding:5px 12px 5px 5px;border-radius:20px;background:var(--bg3);border:1px solid var(--border)}
+.user-av{width:26px;height:26px;border-radius:50%;object-fit:cover;background:var(--bg5)}
+.user-name{font-size:12px;font-weight:600}
+
+/* LAYOUT */
+.main{flex:1}
 .container{max-width:1300px;margin:0 auto;padding:28px 24px}
 .page{display:none}.page.active{display:block}
 
-/* ── CHIP FILTERS ── */
-.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
-.search-input{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 14px;color:var(--txt);font-size:13px;outline:none;font-family:inherit;transition:.2s;width:200px}
-.search-input:focus{border-color:rgba(124,109,240,0.4);background:var(--bg4)}
-.search-input::placeholder{color:var(--txt3)}
-.chip{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--txt3);transition:.15s all;letter-spacing:0.3px;display:inline-flex;align-items:center;gap:5px;user-select:none}
-.chip:hover{border-color:var(--accent);color:var(--accent2);background:rgba(124,109,240,0.05)}
-.chip.active{color:#fff;border-color:transparent;box-shadow:0 2px 12px rgba(0,0,0,0.3)}
-.chip-valued.active{background:linear-gradient(135deg,#0a8f60,#00e898)}
-.chip-hoarded.active{background:linear-gradient(135deg,#b87c10,#ffcc55);color:#1a0e00}
-.chip-rare.active{background:linear-gradient(135deg,#5040c8,#b8adff)}
-.chip-projected.active{background:linear-gradient(135deg,#c03030,#f06858)}
+/* FILTER BAR */
+.filter-bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+.finput{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 13px;color:var(--txt);font-size:13px;outline:none;font-family:inherit;transition:.2s;width:180px}
+.finput:focus{border-color:rgba(124,109,240,0.4);background:var(--bg4)}.finput::placeholder{color:var(--txt3)}
+.sort-sel{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--txt2);font-size:12px;outline:none;font-family:inherit;cursor:pointer;transition:.2s;appearance:none;-webkit-appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236e6e9a' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.sort-sel:focus{border-color:rgba(124,109,240,0.4)}
+.chip{padding:6px 13px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--txt3);transition:.15s;display:inline-flex;align-items:center;gap:4px;user-select:none;letter-spacing:.2px}
+.chip:hover{border-color:var(--accent);color:var(--accent2)}
+.chip.on{color:#fff;border-color:transparent;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.chip-v.on{background:linear-gradient(135deg,#0a8f60,#00e898)}
+.chip-h.on{background:linear-gradient(135deg,#b87c10,#ffcc55);color:#1a0e00}
+.chip-r.on{background:linear-gradient(135deg,#5040c8,#b8adff)}
+.chip-p.on{background:linear-gradient(135deg,#c03030,#f06858)}
+.pginfo{font-size:11px;color:var(--txt3);font-family:'Space Mono',monospace;margin-left:auto}
 
-/* ── ITEM GRID ── */
-.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(192px,1fr));gap:14px}
-.item-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s ease, border-color .2s ease;position:relative;animation:fadeUp .3s cubic-bezier(.22,1,.36,1) both;will-change:transform}
-.item-card:hover{transform:translateY(-4px) scale(1.015)}
-.item-card.is-rare{box-shadow:var(--glow-rare);border-color:rgba(184,173,255,0.3)}
-.item-card.is-rare:hover{box-shadow:0 0 0 1px rgba(184,173,255,0.5),0 8px 40px rgba(124,109,240,0.3);border-color:rgba(184,173,255,0.5)}
-.item-card.is-hoarded{box-shadow:var(--glow-hoarded);border-color:rgba(255,204,85,0.25)}
-.item-card.is-hoarded:hover{box-shadow:0 0 0 1px rgba(255,204,85,0.45),0 8px 40px rgba(255,170,0,0.25);border-color:rgba(255,204,85,0.45)}
-.item-card.is-projected{box-shadow:var(--glow-projected);border-color:rgba(240,104,88,0.25)}
-.item-card.is-projected:hover{box-shadow:0 0 0 1px rgba(240,104,88,0.45),0 8px 40px rgba(200,60,40,0.25);border-color:rgba(240,104,88,0.45)}
-.item-card:nth-child(1){animation-delay:.02s}.item-card:nth-child(2){animation-delay:.04s}.item-card:nth-child(3){animation-delay:.06s}
-.item-card:nth-child(4){animation-delay:.08s}.item-card:nth-child(5){animation-delay:.10s}.item-card:nth-child(6){animation-delay:.12s}
-.item-card:nth-child(7){animation-delay:.13s}.item-card:nth-child(8){animation-delay:.14s}.item-card:nth-child(9){animation-delay:.15s}
-.item-card:nth-child(n+10){animation-delay:.16s}
+/* GRID */
+.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s ease,border-color .18s ease;position:relative;will-change:transform;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both}
+.icard:hover{transform:translateY(-4px) scale(1.015)}
+.icard:nth-child(1){animation-delay:.02s}.icard:nth-child(2){animation-delay:.04s}.icard:nth-child(3){animation-delay:.06s}
+.icard:nth-child(4){animation-delay:.08s}.icard:nth-child(5){animation-delay:.10s}.icard:nth-child(6){animation-delay:.12s}
+.icard:nth-child(7){animation-delay:.13s}.icard:nth-child(8){animation-delay:.14s}.icard:nth-child(n+9){animation-delay:.15s}
+.icard.is-rare{box-shadow:var(--glow-rare);border-color:rgba(184,173,255,0.28)}
+.icard.is-rare:hover{box-shadow:0 0 0 1px rgba(184,173,255,.5),0 8px 40px rgba(124,109,240,.3);border-color:rgba(184,173,255,.5)}
+.icard.is-hoarded{box-shadow:var(--glow-hoarded);border-color:rgba(255,204,85,0.22)}
+.icard.is-hoarded:hover{box-shadow:0 0 0 1px rgba(255,204,85,.45),0 8px 40px rgba(255,170,0,.25);border-color:rgba(255,204,85,.45)}
+.icard.is-projected{box-shadow:var(--glow-projected);border-color:rgba(240,104,88,0.22)}
+.icard.is-projected:hover{box-shadow:0 0 0 1px rgba(240,104,88,.45),0 8px 40px rgba(200,60,40,.25);border-color:rgba(240,104,88,.45)}
+.img-wrap{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:14px;position:relative;overflow:hidden}
+.img-wrap::after{content:'';position:absolute;inset:0;opacity:0;transition:.2s}
+.icard:hover .img-wrap::after{opacity:1}
+.img-wrap.bg-rare{background:linear-gradient(145deg,#100e28,#1a1540)}.img-wrap.bg-rare::after{background:radial-gradient(circle at 50% 60%,rgba(124,109,240,.14),transparent 65%)}
+.img-wrap.bg-hoarded{background:linear-gradient(145deg,#180e02,#221505)}.img-wrap.bg-hoarded::after{background:radial-gradient(circle at 50% 60%,rgba(255,180,0,.1),transparent 65%)}
+.img-wrap.bg-projected{background:linear-gradient(145deg,#1a0804,#220a06)}.img-wrap.bg-projected::after{background:radial-gradient(circle at 50% 60%,rgba(240,80,40,.1),transparent 65%)}
+.img-wrap.bg-default{background:var(--bg3)}
+.icard-img{width:100%;height:100%;object-fit:contain;transition:transform .22s cubic-bezier(.22,1,.36,1);position:relative;z-index:1}
+.icard:hover .icard-img{transform:scale(1.07) translateY(-3px)}
+.cpips{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:3px;z-index:2}
+.cpip{width:6px;height:6px;border-radius:50%}
+.cpip.rare{background:var(--accent2);box-shadow:0 0 6px var(--accent2)}
+.cpip.hoarded{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+.cpip.projected{background:var(--red);box-shadow:0 0 6px var(--red)}
+.cpip.unsettled{background:var(--orange);box-shadow:0 0 6px var(--orange)}
+.icard-body{padding:11px 13px 13px}
+.icard-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.icard-aka{font-size:9px;color:var(--txt3);font-family:'Space Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
+.icard-nums{display:flex;justify-content:space-between;align-items:flex-end}
+.icard-rap{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--green)}
+.icard-val{text-align:right}.icard-vl{font-size:9px;color:var(--txt3)}.icard-vn{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent2);font-weight:700}
+.itags{display:flex;gap:3px;flex-wrap:wrap;margin-top:7px}
+.tpill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.2px}
+.tp-r{background:rgba(184,173,255,.1);color:var(--accent2);border:1px solid rgba(184,173,255,.18)}
+.tp-h{background:rgba(255,204,85,.1);color:var(--gold);border:1px solid rgba(255,204,85,.18)}
+.tp-p{background:rgba(240,104,88,.1);color:var(--red);border:1px solid rgba(240,104,88,.18)}
+.tp-u{background:rgba(255,153,68,.1);color:var(--orange);border:1px solid rgba(255,153,68,.18)}
 
-.item-img-wrap{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:16px;position:relative;overflow:hidden}
-.item-img-wrap::before{content:'';position:absolute;inset:0;opacity:0;transition:.3s}
-.item-card:hover .item-img-wrap::before{opacity:1}
-.item-img-wrap.bg-rare{background:linear-gradient(145deg,#100e28 0%,#1a1540 100%)}
-.item-img-wrap.bg-rare::before{background:radial-gradient(circle at 50% 50%,rgba(124,109,240,0.12),transparent 70%)}
-.item-img-wrap.bg-hoarded{background:linear-gradient(145deg,#180e02 0%,#221505 100%)}
-.item-img-wrap.bg-hoarded::before{background:radial-gradient(circle at 50% 50%,rgba(255,180,0,0.1),transparent 70%)}
-.item-img-wrap.bg-projected{background:linear-gradient(145deg,#1a0804 0%,#220a06 100%)}
-.item-img-wrap.bg-projected::before{background:radial-gradient(circle at 50% 50%,rgba(240,80,40,0.1),transparent 70%)}
-.item-img-wrap.bg-default{background:var(--bg3)}
-.item-img{width:100%;height:100%;object-fit:contain;transition:transform .25s cubic-bezier(.22,1,.36,1);position:relative;z-index:1}
-.item-card:hover .item-img{transform:scale(1.07) translateY(-3px)}
-
-/* corner pips */
-.corner-pips{position:absolute;top:9px;right:9px;display:flex;flex-direction:column;gap:4px;z-index:2}
-.cpip{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.cpip.rare{background:var(--accent2);box-shadow:0 0 7px var(--accent2)}
-.cpip.hoarded{background:var(--gold);box-shadow:0 0 7px var(--gold)}
-.cpip.projected{background:var(--red);box-shadow:0 0 7px var(--red)}
-.cpip.unsettled{background:var(--orange);box-shadow:0 0 7px var(--orange)}
-
-.item-info{padding:12px 14px 14px}
-.item-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
-.item-aka{font-size:9px;color:var(--txt3);font-family:'Space Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:7px}
-.item-nums{display:flex;justify-content:space-between;align-items:flex-end;gap:4px}
-.item-rap{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--green)}
-.item-val-wrap{text-align:right}
-.item-val-lbl{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.3px}
-.item-val-num{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent2);font-weight:700}
-.item-tag-row{display:flex;gap:3px;flex-wrap:wrap;margin-top:8px}
-.tpill{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:0.3px}
-.tpill-rare{background:rgba(184,173,255,0.1);color:var(--accent2);border:1px solid rgba(184,173,255,0.18)}
-.tpill-hoarded{background:rgba(255,204,85,0.1);color:var(--gold);border:1px solid rgba(255,204,85,0.18)}
-.tpill-projected{background:rgba(240,104,88,0.1);color:var(--red);border:1px solid rgba(240,104,88,0.18)}
-.tpill-unsettled{background:rgba(255,153,68,0.1);color:var(--orange);border:1px solid rgba(255,153,68,0.18)}
-
-/* ── SKELETON LOADER ── */
-.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
-
-/* ── PAGINATION ── */
-.pagination{display:flex;justify-content:center;align-items:center;gap:14px;padding:26px 0 8px}
-.pginfo{font-size:11px;color:var(--txt3);font-family:'Space Mono',monospace;letter-spacing:0.3px}
-
-/* ── BUTTONS ── */
-.btn{padding:9px 18px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s all;display:inline-flex;align-items:center;gap:6px}
-.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent3);transform:translateY(-1px);box-shadow:0 4px 16px rgba(124,109,240,0.35)}
-.btn-ghost{background:var(--bg3);color:var(--txt2);border:1px solid var(--border)}.btn-ghost:hover{color:var(--txt);background:var(--bg4)}
-.btn-sm{padding:6px 12px;font-size:11px;border-radius:8px}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
-
-/* ── INPUT ── */
-.inp{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--txt);font-size:13px;width:100%;outline:none;font-family:inherit;transition:.2s all}
-.inp:focus{border-color:rgba(124,109,240,0.4);background:var(--bg4);box-shadow:0 0 0 3px rgba(124,109,240,0.08)}
-.inp::placeholder{color:var(--txt3)}
-.lbl{font-size:10px;color:var(--txt3);display:block;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
-
-/* ── MODAL ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;justify-content:center;align-items:flex-start;padding:5vh 16px;backdrop-filter:blur(10px) saturate(1.5);overflow-y:auto}
-.modal-overlay.open{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:720px;max-width:100%;padding:0;position:relative;animation:popIn .28s cubic-bezier(.34,1.3,.64,1)}
-.modal.is-rare{border-color:rgba(184,173,255,0.35);box-shadow:0 0 0 1px rgba(184,173,255,0.12),0 24px 64px rgba(80,64,200,0.25)}
-.modal.is-hoarded{border-color:rgba(255,204,85,0.3);box-shadow:0 0 0 1px rgba(255,204,85,0.08),0 24px 64px rgba(180,120,0,0.2)}
-.modal.is-projected{border-color:rgba(240,104,88,0.3);box-shadow:0 0 0 1px rgba(240,80,60,0.08),0 24px 64px rgba(200,50,30,0.2)}
-.modal-close{position:absolute;top:16px;right:16px;background:var(--bg4);border:1px solid var(--border);color:var(--txt2);width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.15s;z-index:10;line-height:1}
-.modal-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
-.modal-hero{padding:28px 28px 20px;display:flex;gap:22px;align-items:flex-start}
-.modal-thumb-wrap{width:160px;height:160px;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:14px;flex-shrink:0}
-.modal-thumb-wrap.bg-rare{background:linear-gradient(145deg,#0e0c24,#1a1540)}
-.modal-thumb-wrap.bg-hoarded{background:linear-gradient(145deg,#160c02,#201404)}
-.modal-thumb-wrap.bg-projected{background:linear-gradient(145deg,#180604,#220806)}
-.modal-thumb-wrap.bg-default{background:var(--bg3)}
-.modal-thumb{width:100%;height:100%;object-fit:contain}
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;justify-content:center;align-items:flex-start;padding:4vh 16px 24px;backdrop-filter:blur(10px);overflow-y:auto}
+.modal-ov.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:700px;max-width:100%;position:relative;animation:popIn .22s cubic-bezier(.22,1,.36,1)}
+.modal.is-rare{border-color:rgba(184,173,255,.35);box-shadow:0 0 0 1px rgba(184,173,255,.1),0 24px 64px rgba(80,64,200,.25)}
+.modal.is-hoarded{border-color:rgba(255,204,85,.3);box-shadow:0 0 0 1px rgba(255,204,85,.08),0 24px 64px rgba(180,120,0,.2)}
+.modal.is-projected{border-color:rgba(240,104,88,.3);box-shadow:0 0 0 1px rgba(240,80,60,.08),0 24px 64px rgba(200,50,30,.2)}
+.modal-x{position:absolute;top:14px;right:14px;background:var(--bg4);border:1px solid var(--border);color:var(--txt2);width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;z-index:5}
+.modal-x:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.modal-hero{padding:26px 26px 18px;display:flex;gap:20px;align-items:flex-start}
+.modal-thumb{width:152px;height:152px;border-radius:13px;display:flex;align-items:center;justify-content:center;padding:14px;flex-shrink:0}
+.mt-rare{background:linear-gradient(145deg,#0e0c24,#1a1540)}
+.mt-hoarded{background:linear-gradient(145deg,#160c02,#201404)}
+.mt-projected{background:linear-gradient(145deg,#180604,#220806)}
+.mt-default{background:var(--bg3)}
+.modal-thumb img{width:100%;height:100%;object-fit:contain}
 .modal-meta{flex:1;min-width:0}
-.modal-name{font-size:22px;font-weight:700;line-height:1.25;margin-bottom:3px}
-.modal-aka{font-size:11px;color:var(--txt3);font-family:'Space Mono',monospace;margin-bottom:12px}
-.modal-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
-.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.2px}
-.b-demand-high{background:rgba(0,232,152,0.12);color:var(--green);border:1px solid rgba(0,232,152,0.2)}
-.b-demand-normal{background:rgba(184,173,255,0.1);color:var(--accent2);border:1px solid rgba(184,173,255,0.18)}
-.b-demand-low{background:rgba(240,104,88,0.1);color:var(--red);border:1px solid rgba(240,104,88,0.18)}
-.b-trend-rising{background:rgba(0,232,152,0.1);color:var(--green);border:1px solid rgba(0,232,152,0.18)}
-.b-trend-stable{background:rgba(124,109,240,0.08);color:var(--accent2);border:1px solid rgba(124,109,240,0.15)}
-.b-trend-unstable{background:rgba(240,104,88,0.1);color:var(--red);border:1px solid rgba(240,104,88,0.18)}
-.funfact{font-size:12px;color:var(--gold);background:rgba(255,204,85,0.07);border:1px solid rgba(255,204,85,0.15);border-radius:10px;padding:10px 13px;line-height:1.6;margin-top:10px}
+.modal-name{font-size:21px;font-weight:700;line-height:1.25;margin-bottom:2px}
+.modal-aka{font-size:10px;color:var(--txt3);font-family:'Space Mono',monospace;margin-bottom:10px}
+.badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.bd-high{background:rgba(0,232,152,.1);color:var(--green);border:1px solid rgba(0,232,152,.2)}
+.bd-normal{background:rgba(184,173,255,.08);color:var(--accent2);border:1px solid rgba(184,173,255,.15)}
+.bd-low{background:rgba(240,104,88,.1);color:var(--red);border:1px solid rgba(240,104,88,.18)}
+.bd-rising{background:rgba(0,232,152,.08);color:var(--green);border:1px solid rgba(0,232,152,.15)}
+.bd-stable{background:rgba(124,109,240,.07);color:var(--accent2);border:1px solid rgba(124,109,240,.12)}
+.bd-unstable{background:rgba(240,104,88,.08);color:var(--red);border:1px solid rgba(240,104,88,.15)}
+.funfact{font-size:12px;color:var(--gold);background:rgba(255,204,85,.07);border:1px solid rgba(255,204,85,.14);border-radius:9px;padding:9px 12px;margin-top:9px;line-height:1.6}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:0 26px 18px}
+.sbox{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:13px;text-align:center}
+.sval{font-family:'Space Mono',monospace;font-size:16px;font-weight:700}
+.slbl{font-size:9px;color:var(--txt3);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
 
-/* stat row */
-.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 28px 20px}
-.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:14px;text-align:center}
-.stat-val{font-family:'Space Mono',monospace;font-size:17px;font-weight:700}
-.stat-lbl{font-size:9px;color:var(--txt3);margin-top:5px;text-transform:uppercase;letter-spacing:0.6px}
+/* Graph */
+.gsec{padding:0 26px 20px}
+.ghdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.gtitle{font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px}
+.gpill{font-size:9px;padding:2px 7px;border-radius:8px;background:var(--bg4);color:var(--txt3);border:1px solid var(--border)}
+.gwrap{position:relative;height:155px;background:var(--bg3);border:1px solid var(--border);border-radius:11px;overflow:hidden}
+.gwrap.skel{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+.gsvg{width:100%;height:100%;display:block}
+.gline{fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:2000;animation:draw 1.1s ease both}
+.garea{opacity:.15}
+.gtip{position:fixed;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:11px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.5);opacity:0;transition:opacity .1s;z-index:999}
+.gtip.show{opacity:1}
+.gcross{position:fixed;width:1px;pointer-events:none;display:none;background:rgba(255,255,255,.1)}
 
-/* ── RAP GRAPH ── */
-.graph-section{padding:0 28px 24px}
-.graph-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.graph-title{font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px}
-.graph-pill{font-size:9px;padding:2px 8px;border-radius:10px;background:var(--bg4);color:var(--txt3);border:1px solid var(--border)}
-.graph-wrap{position:relative;height:160px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.graph-wrap.loading{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
-.graph-svg{width:100%;height:100%;display:block}
-.graph-line{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1000;stroke-dashoffset:0;animation:draw-line 1.2s ease both}
-.graph-area{opacity:0.18}
-.graph-tooltip{position:absolute;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:11px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.4);opacity:0;transition:.1s opacity;z-index:10}
-.graph-tooltip.show{opacity:1}
-.graph-crosshair{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,0.1);pointer-events:none;display:none}
+/* Owners */
+.own-sec{padding:0 26px 18px}
+.own-title{font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.own-row{display:flex;gap:6px;flex-wrap:wrap}
+.own-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;transition:.12s}
+.own-chip:hover{border-color:rgba(124,109,240,.3)}
 
-/* owners strip */
-.owners-section{padding:0 28px 20px}
-.owners-title{font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.owners-row{display:flex;gap:8px;flex-wrap:wrap}
-.owner-chip{display:inline-flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:6px 11px;font-size:11px;transition:.15s}
-.owner-chip:hover{border-color:rgba(124,109,240,0.3);background:var(--bg4)}
-.owner-count{font-family:'Space Mono',monospace;font-size:10px;color:var(--txt3);margin-left:2px}
+.mdivider{height:1px;background:var(--border);margin:0 26px 18px}
+.mlinks{padding:0 26px 26px;display:flex;gap:8px}
 
-.modal-divider{height:1px;background:var(--border);margin:0 28px 20px}
+/* TRADE ADS */
+.trade-wrap{display:grid;grid-template-columns:1fr;gap:14px}
+.tcard{background:var(--bg2);border:1px solid var(--border);border-radius:15px;padding:20px;animation:fadeUp .25s ease both;transition:.18s}
+.tcard:hover{border-color:rgba(124,109,240,.2);box-shadow:0 4px 24px rgba(124,109,240,.07)}
+.tc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.tc-user{display:flex;align-items:center;gap:9px}
+.tc-av{width:30px;height:30px;border-radius:9px;object-fit:cover;background:linear-gradient(135deg,var(--accent3),var(--accent));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden}
+.tc-av img{width:100%;height:100%;object-fit:cover}
+.tc-uname{font-size:13px;font-weight:700}
+.tc-meta{font-size:10px;color:var(--txt3)}
+.tc-actions{display:flex;align-items:center;gap:7px}
+.tc-time{font-size:10px;color:var(--txt3);font-family:'Space Mono',monospace}
+.tc-del{background:none;border:none;color:var(--txt3);cursor:pointer;padding:4px 8px;border-radius:6px;font-size:11px;font-family:inherit;display:flex;align-items:center;gap:3px;transition:.12s}
+.tc-del:hover{color:var(--red);background:rgba(240,104,88,.08)}
+.tc-body{display:grid;grid-template-columns:1fr 36px 1fr;gap:10px;align-items:start}
+.tc-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--txt3);margin-bottom:7px}
+.tc-items{display:flex;flex-direction:column;gap:5px}
+.tci{display:flex;align-items:center;gap:9px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;transition:.12s}
+.tci:hover{border-color:rgba(124,109,240,.28);background:var(--bg4)}
+.tci.is-rare{border-color:rgba(184,173,255,.22);background:rgba(184,173,255,.03)}
+.tci.is-hoarded{border-color:rgba(255,204,85,.22);background:rgba(255,204,85,.03)}
+.tci.is-projected{border-color:rgba(240,104,88,.22);background:rgba(240,104,88,.03)}
+.tci-img{width:36px;height:36px;border-radius:7px;object-fit:contain;background:var(--bg4);padding:2px;flex-shrink:0}
+.tci-name{font-size:11px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tci-rap{font-size:10px;color:var(--green);font-family:'Space Mono',monospace;flex-shrink:0}
+.tc-arrow{display:flex;align-items:center;justify-content:center;padding-top:22px}
+.tc-foot{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.rap-bar-wrap{width:70px;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-right:6px}
+.rap-bar{height:100%;border-radius:2px;transition:width .5s ease}
+.tc-raps{display:flex;gap:14px}.tc-rap-txt{font-size:10px;color:var(--txt3)}.tc-rap-txt span{font-family:'Space Mono',monospace;font-weight:700;color:var(--txt2)}
 
-.modal-links{padding:0 28px 28px;display:flex;gap:8px}
-
-/* ── TRADE ADS ── */
-.trade-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:14px;transition:.2s;animation:fadeUp .3s ease both}
-.trade-card:hover{border-color:rgba(124,109,240,0.25);box-shadow:0 4px 24px rgba(124,109,240,0.07)}
-.trade-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.trade-user-row{display:flex;align-items:center;gap:9px}
-.trade-avatar{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent3),var(--accent));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0}
-.trade-username{font-size:14px;font-weight:700}
-.trade-time{font-size:10px;color:var(--txt3);font-family:'Space Mono',monospace}
-.trade-body{display:grid;grid-template-columns:1fr 44px 1fr;gap:12px;align-items:start}
-.trade-side-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--txt3);margin-bottom:8px}
-.trade-items-wrap{display:flex;flex-direction:column;gap:6px}
-.titem{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 11px;cursor:pointer;transition:.15s}
-.titem:hover{border-color:rgba(124,109,240,0.3);background:var(--bg4)}
-.titem.is-rare{border-color:rgba(184,173,255,0.25);background:rgba(184,173,255,0.04)}
-.titem.is-hoarded{border-color:rgba(255,204,85,0.25);background:rgba(255,204,85,0.04)}
-.titem.is-projected{border-color:rgba(240,104,88,0.25);background:rgba(240,104,88,0.04)}
-.titem-thumb{width:38px;height:38px;border-radius:8px;object-fit:contain;background:var(--bg4);padding:2px;flex-shrink:0}
-.titem-name{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
-.titem-rap{font-size:10px;color:var(--green);font-family:'Space Mono',monospace;flex-shrink:0}
-.trade-arrow-col{display:flex;align-items:center;justify-content:center;padding-top:28px}
-.trade-divider-icon{width:28px;height:28px;background:var(--bg4);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--txt3)}
-.trade-foot{margin-top:14px;display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid var(--border)}
-.trade-rap-compare{display:flex;align-items:center;gap:10px}
-.rap-bar-wrap{width:80px;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
-.rap-bar{height:100%;border-radius:3px;transition:width .6s ease}
-.trade-rap-txt{font-size:10px;color:var(--txt3)}
-.trade-rap-txt span{font-family:'Space Mono',monospace;font-weight:700}
-.trade-remove{background:none;border:none;color:var(--txt3);cursor:pointer;padding:4px 8px;border-radius:6px;font-size:11px;font-family:inherit;transition:.15s;display:flex;align-items:center;gap:4px}
-.trade-remove:hover{color:var(--red);background:rgba(240,104,88,0.08)}
-
-/* item picker */
-.picker-row{display:flex;gap:6px;margin-bottom:8px}
-.picker-chips{display:flex;flex-wrap:wrap;gap:6px;min-height:10px}
-.pchip{display:flex;align-items:center;gap:6px;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:5px 9px;font-size:11px;animation:popIn .2s ease}
-.pchip img{width:26px;height:26px;border-radius:5px;object-fit:contain}
-.pchip-name{max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
-.pchip-x{background:none;border:none;color:var(--txt3);cursor:pointer;padding:0;font-size:15px;line-height:1;transition:.12s}
+/* Item picker (trade post) */
+.post-grid{display:grid;grid-template-columns:1fr 40px 1fr;gap:14px;align-items:start}
+.picker-search-wrap{position:relative;margin-bottom:6px}
+.picker-inp{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 12px;color:var(--txt);font-size:12px;width:100%;outline:none;font-family:inherit;transition:.18s}
+.picker-inp:focus{border-color:rgba(124,109,240,.4);background:var(--bg4)}
+.picker-inp::placeholder{color:var(--txt3)}
+.picker-drop{position:absolute;top:calc(100%+4px);left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:100;max-height:200px;overflow-y:auto;display:none;animation:dropDown .12s ease}
+.picker-drop.show{display:block}
+.pd-item{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;transition:.1s}
+.pd-item:hover{background:var(--bg3)}
+.pd-item img{width:30px;height:30px;border-radius:6px;object-fit:contain;background:var(--bg4);padding:1px;flex-shrink:0}
+.pd-name{font-size:11px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pd-rap{font-size:10px;color:var(--green);font-family:'Space Mono',monospace}
+.pd-none{padding:12px;font-size:11px;color:var(--txt3);text-align:center}
+.picked-chips{display:flex;flex-wrap:wrap;gap:5px;min-height:4px;margin-top:4px}
+.pchip{display:flex;align-items:center;gap:5px;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:10px;animation:popIn .18s ease}
+.pchip img{width:24px;height:24px;border-radius:5px;object-fit:contain}
+.pchip-n{max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pchip-x{background:none;border:none;color:var(--txt3);cursor:pointer;padding:0;font-size:14px;line-height:1;transition:.1s;flex-shrink:0}
 .pchip-x:hover{color:var(--red)}
-.trade-err{font-size:11px;color:var(--red);margin-top:6px;display:none}
+.post-lmt{font-size:10px;color:var(--txt3);margin-top:3px}
 
-/* ── PROFILE ── */
-.profile-hdr{display:flex;gap:20px;align-items:flex-start;margin-bottom:20px}
-.profile-avatar{width:90px;height:90px;border-radius:16px;background:var(--bg3);object-fit:cover;flex-shrink:0;border:2px solid var(--border)}
-.profile-name{font-size:24px;font-weight:700;margin-bottom:3px}
-.profile-sub{font-size:11px;color:var(--txt3);margin-bottom:8px}
-.profile-bio{font-size:13px;color:var(--txt2);line-height:1.6;max-width:460px;margin-top:6px}
-
-/* cards */
+/* General */
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:22px}
-.card-title{font-size:14px;font-weight:700;margin-bottom:16px}
-
-.empty{text-align:center;padding:64px 20px}
-.empty-icon{font-size:32px;margin-bottom:12px;opacity:.4}
-.empty h3{color:var(--txt2);margin-bottom:6px;font-size:15px;font-weight:600}
+.ctitle{font-size:14px;font-weight:700;margin-bottom:16px}
+.btn{padding:9px 18px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent3);transform:translateY(-1px);box-shadow:0 4px 16px rgba(124,109,240,.3)}
+.btn-g{background:var(--bg3);color:var(--txt2);border:1px solid var(--border)}.btn-g:hover{color:var(--txt);background:var(--bg4)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.inp{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 13px;color:var(--txt);font-size:13px;width:100%;outline:none;font-family:inherit;transition:.18s}
+.inp:focus{border-color:rgba(124,109,240,.4);background:var(--bg4)}.inp::placeholder{color:var(--txt3)}
+.lbl{font-size:10px;color:var(--txt3);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.errtxt{font-size:11px;color:var(--red);margin-top:6px;display:none}
+.empty{text-align:center;padding:56px 20px}
+.empty-ico{font-size:28px;opacity:.3;margin-bottom:10px}
+.empty h3{color:var(--txt2);margin-bottom:5px;font-size:14px;font-weight:600}
 .empty p{font-size:12px;color:var(--txt3)}
-.spinner{width:24px;height:24px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;margin:48px auto}
+.spinner{width:22px;height:22px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .55s linear infinite;margin:44px auto}
+.pagination{display:flex;justify-content:center;align-items:center;gap:14px;padding:24px 0 6px}
+
+/* Player page */
+.profile-hdr{display:flex;gap:18px;align-items:flex-start;margin-bottom:20px}
+.pav{width:88px;height:88px;border-radius:15px;object-fit:cover;background:var(--bg3);border:2px solid var(--border)}
+.pname{font-size:23px;font-weight:700;margin-bottom:2px}
+.psub{font-size:11px;color:var(--txt3);margin-bottom:7px}
+.pbio{font-size:13px;color:var(--txt2);line-height:1.6;max-width:440px;margin-top:5px}
+.inv-section{margin-top:20px}
+.inv-title{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.serial-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,204,85,.08);border:1px solid rgba(255,204,85,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--gold);margin:0 4px 4px 0}
+.serial-chip .sn{font-family:'Space Mono',monospace;font-weight:700}
+
+/* Trade search bar */
+.trade-bar{display:flex;gap:8px;margin-bottom:18px}
+.trade-search{flex:1}
+
+/* FOOTER */
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28px 24px;margin-top:auto}
+.footer-inner{max-width:1300px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.footer-brand{display:flex;flex-direction:column;gap:8px}
+.footer-logo{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.footer-sub{font-size:12px;color:var(--txt3);max-width:280px;line-height:1.6}
+.footer-links{display:flex;gap:10px;flex-wrap:wrap}
+.flink{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--txt2);text-decoration:none;transition:.14s;background:var(--bg3)}
+.flink:hover{color:var(--txt);border-color:rgba(124,109,240,.3);background:var(--bg4)}
+.flink.discord{border-color:rgba(88,101,242,.35);color:#7983f5}
+.flink.discord:hover{background:rgba(88,101,242,.1);border-color:rgba(88,101,242,.5)}
+.footer-copy{font-size:11px;color:var(--txt3);margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
 
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px}
-
 @media(max-width:760px){
-.nav{padding:0 14px}.nav-tabs .nav-tab span{display:none}
-.search-wrap input{width:120px}.search-wrap input:focus{width:160px}
-.item-grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
-.trade-body{grid-template-columns:1fr 28px 1fr}
-.modal-hero{flex-direction:column}.modal-thumb-wrap{width:100%;height:180px;border-radius:12px}
-.stat-row{grid-template-columns:repeat(2,1fr)}
+  .nav{padding:0 14px}.nav-tabs .ntab span{display:none}
+  .item-grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:9px}
+  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .modal-hero{flex-direction:column}.modal-thumb{width:100%;height:180px}
+  .post-grid{grid-template-columns:1fr 30px 1fr}
+  .tc-body{grid-template-columns:1fr 28px 1fr}
+  .footer-inner{flex-direction:column}
 }
 </style>
 </head>
 <body>
 
 <nav class="nav">
-  <div class="nav-logo"><span class="logo-dot"></span><span class="logo-poly">Poly</span><span class="logo-val">Value</span></div>
+  <div class="nav-logo"><span class="logo-dot"></span><span class="logo-poly">Poly</span><span class="logo-v">Value</span></div>
   <div class="nav-tabs">
-    <button class="nav-tab active" data-page="items">
+    <button class="ntab active" data-page="items">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
       <span>Limiteds</span>
     </button>
-    <button class="nav-tab" data-page="trades">
+    <button class="ntab" data-page="trades">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
       <span>Trade Ads</span>
     </button>
-    <button class="nav-tab" data-page="players">
+    <button class="ntab" data-page="players">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       <span>Players</span>
     </button>
   </div>
   <div class="nav-right">
-    <div class="search-wrap">
-      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="global-search" placeholder="Search items…">
+    <div class="gsearch-wrap">
+      <svg class="gsi" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="gsearch" id="gsearch" placeholder="Search items…" autocomplete="off">
+      <div class="search-preview" id="search-preview"></div>
     </div>
+    <div id="auth-area"></div>
   </div>
 </nav>
 
+<div class="main">
 <div class="container">
 
   <!-- LIMITEDS -->
   <div class="page active" id="page-items">
     <div class="filter-bar">
-      <input class="search-input" id="item-search" placeholder="Search limiteds…">
-      <span class="chip chip-valued" id="chip-valued">Has Value</span>
-      <span class="chip chip-hoarded" id="chip-hoarded">Hoarded</span>
-      <span class="chip chip-rare" id="chip-rare">Rare</span>
-      <span class="chip chip-projected" id="chip-projected">Projected</span>
-      <span class="pginfo" id="pginfo" style="margin-left:auto"></span>
+      <input class="finput" id="item-search" placeholder="Search…" autocomplete="off">
+      <select class="sort-sel" id="sort-sel">
+        <option value="">Default</option>
+        <option value="rap-desc">RAP: High → Low</option>
+        <option value="rap-asc">RAP: Low → High</option>
+        <option value="val-desc">Value: High → Low</option>
+        <option value="val-asc">Value: Low → High</option>
+      </select>
+      <span class="chip chip-v" id="chip-v">Has Value</span>
+      <span class="chip chip-h" id="chip-h">Hoarded</span>
+      <span class="chip chip-r" id="chip-r">Rare</span>
+      <span class="chip chip-p" id="chip-p">Projected</span>
+      <span class="pginfo" id="pginfo"></span>
     </div>
     <div id="items-grid" class="item-grid"></div>
     <div class="pagination">
-      <button class="btn btn-ghost" id="btn-prev" style="display:none">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg> Prev
+      <button class="btn btn-g" id="btn-prev" style="display:none">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg> Prev
       </button>
       <span class="pginfo" id="pginfo2"></span>
-      <button class="btn btn-ghost" id="btn-next">
-        Next <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      <button class="btn btn-g" id="btn-next">
+        Next <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
   </div>
 
   <!-- TRADES -->
   <div class="page" id="page-trades">
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-title">Post Trade Ad</div>
-      <div style="display:grid;grid-template-columns:1fr 44px 1fr;gap:14px;align-items:start">
-        <div>
-          <label class="lbl">Offering</label>
-          <div class="picker-row"><input class="inp" id="offer-input" placeholder="Item ID…" style="flex:1"><button class="btn btn-ghost btn-sm" id="offer-add">Add</button></div>
-          <div class="picker-chips" id="offer-chips"></div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:center;padding-top:26px">
-          <div style="width:28px;height:28px;background:var(--bg4);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--txt3)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+    <div class="card" style="margin-bottom:18px" id="post-card">
+      <div class="ctitle">Post Trade Ad</div>
+      <div id="login-prompt" style="display:none;text-align:center;padding:12px 0 4px">
+        <p style="font-size:13px;color:var(--txt2);margin-bottom:12px">Sign in with Discord to post trade ads</p>
+        <a href="https://polyvalue.onrender.com/auth/discord" class="btn" style="background:var(--discord);color:#fff;text-decoration:none">
+          <svg width="16" height="12" viewBox="0 0 24 18" fill="currentColor"><path d="M20.317 1.492a19.82 19.82 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 1.492a.07.07 0 0 0-.032.027C.533 6.036-.32 10.444.099 14.796a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+          Login with Discord
+        </a>
+      </div>
+      <div id="post-form">
+        <div class="post-grid">
+          <div>
+            <label class="lbl">Offering (up to 4)</label>
+            <div class="picker-search-wrap">
+              <input class="picker-inp" id="offer-search" placeholder="Search item name…" autocomplete="off">
+              <div class="picker-drop" id="offer-drop"></div>
+            </div>
+            <div class="picked-chips" id="offer-chips"></div>
+            <div class="post-lmt" id="offer-lmt" style="display:none"></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;padding-top:26px;color:var(--txt3)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+          </div>
+          <div>
+            <label class="lbl">Wants (up to 4)</label>
+            <div class="picker-search-wrap">
+              <input class="picker-inp" id="want-search" placeholder="Search item name…" autocomplete="off">
+              <div class="picker-drop" id="want-drop"></div>
+            </div>
+            <div class="picked-chips" id="want-chips"></div>
+            <div class="post-lmt" id="want-lmt" style="display:none"></div>
           </div>
         </div>
-        <div>
-          <label class="lbl">Wants</label>
-          <div class="picker-row"><input class="inp" id="want-input" placeholder="Item ID…" style="flex:1"><button class="btn btn-ghost btn-sm" id="want-add">Add</button></div>
-          <div class="picker-chips" id="want-chips"></div>
+        <div style="margin-top:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-p" id="trade-post-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Post Ad
+          </button>
+          <span style="font-size:11px;color:var(--txt3)" id="trade-limit-info"></span>
         </div>
+        <div class="errtxt" id="trade-err"></div>
       </div>
-      <div style="margin-top:14px;display:flex;gap:8px;align-items:flex-end">
-        <div style="flex:1"><label class="lbl">Your Username</label><input class="inp" id="trade-username" placeholder="e.g. annul"></div>
-        <button class="btn btn-primary" id="trade-post">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Post Ad
-        </button>
+    </div>
+    <div class="trade-bar">
+      <div style="position:relative;flex:1">
+        <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--txt3);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="inp trade-search" id="trade-search" placeholder="Search trade ads by item name or user…" style="padding-left:34px">
       </div>
-      <div class="trade-err" id="trade-err"></div>
     </div>
     <div id="trade-list"></div>
   </div>
 
   <!-- PLAYERS -->
   <div class="page" id="page-players">
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-title">Player Lookup</div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="ctitle">Player Lookup</div>
       <div style="display:flex;gap:8px">
         <input class="inp" id="player-input" placeholder="Username or user ID" style="flex:1">
-        <button class="btn btn-primary" id="player-btn">Look Up</button>
+        <button class="btn btn-p" id="player-btn">Look Up</button>
       </div>
     </div>
     <div id="player-result"></div>
   </div>
 
 </div>
+</div>
 
 <!-- MODAL -->
-<div class="modal-overlay" id="modal-overlay">
+<div class="modal-ov" id="modal-ov">
   <div class="modal" id="modal-box">
-    <button class="modal-close" id="modal-close">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <button class="modal-x" id="modal-x">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
     <div id="modal-content"></div>
   </div>
 </div>
 
-<div class="graph-tooltip" id="graph-tooltip"></div>
-<div class="graph-crosshair" id="graph-crosshair"></div>
+<div class="gtip" id="gtip"></div>
+<div class="gcross" id="gcross"></div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>
+        <span style="color:var(--accent2)">Poly</span><span style="color:var(--txt)">Value</span>
+      </div>
+      <div class="footer-sub">The best way to track Polytoria limited values, demand, and trades. Built by the community.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="footer-links">
+        <a href="https://discord.gg/YOUR_INVITE" target="_blank" class="flink discord">
+          <svg width="15" height="11" viewBox="0 0 24 18" fill="currentColor"><path d="M20.317 1.492a19.82 19.82 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 1.492a.07.07 0 0 0-.032.027C.533 6.036-.32 10.444.099 14.796a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+          Join Discord
+        </a>
+        <a href="https://polytoria.com/groups/1" target="_blank" class="flink">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Polytoria Group
+        </a>
+        <a href="https://polytoria.com" target="_blank" class="flink">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Polytoria
+        </a>
+      </div>
+      <div class="footer-copy">© 2026 PolyValue · Not affiliated with Polytoria · Data from polytoria.trade</div>
+    </div>
+  </div>
+</footer>
 
 <script>
-const PROXY = "https://polyvalue.onrender.com";
-const T = PROXY + "/trade/api/trpc/";
+const API  = "https://polyvalue.onrender.com";
+const T    = API + "/trade/api/trpc/";
 const POLY = "https://api.polytoria.com/v1";
 
 // ── Utils ──
 const esc=s=>{const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML};
 const num=n=>n==null||n===""?"—":Number(n).toLocaleString();
-const timeAgo=ms=>{const s=Math.floor((Date.now()-ms)/1000);if(s<60)return s+"s ago";if(s<3600)return Math.floor(s/60)+"m ago";if(s<86400)return Math.floor(s/3600)+"h ago";return Math.floor(s/86400)+"d ago"};
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const timeAgo=ms=>{const s=Math.floor((Date.now()-ms*1000)/1000);if(s<60)return s+"s ago";if(s<3600)return Math.floor(s/60)+"m ago";if(s<86400)return Math.floor(s/3600)+"h ago";return Math.floor(s/86400)+"d ago"};
+const ico=(p,extra="")=>`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ${extra}>${p}</svg>`;
 
 // ── Tag helpers ──
-const TAG_TO_CLS={Hoarded:"hoarded",Projected:"projected",Rare:"rare",Unsettled:"unsettled"};
-const TAG_PILL_CLS={hoarded:"tpill-hoarded",projected:"tpill-projected",rare:"tpill-rare",unsettled:"tpill-unsettled"};
-const CPIP_CLS={hoarded:"hoarded",projected:"projected",rare:"rare",unsettled:"unsettled"};
+const TAG_CLS={Hoarded:"hoarded",Projected:"projected",Rare:"rare",Unsettled:"unsettled"};
+const PILL_CLS={hoarded:"tp-h",projected:"tp-p",rare:"tp-r",unsettled:"tp-u"};
+const PIP_CLS={hoarded:"hoarded",projected:"projected",rare:"rare",unsettled:"unsettled"};
 
-function getCardCls(tags,allTags){
+function cardClass(tags,at){
   if(!tags?.length) return "";
-  const names=tags.map(t=>allTags.find(a=>a.id===t.tagId)?.name||"");
-  if(names.includes("Rare")) return "is-rare";
-  if(names.includes("Projected")) return "is-projected";
-  if(names.includes("Hoarded")) return "is-hoarded";
+  const ns=tags.map(t=>at.find(a=>a.id===t.tagId)?.name||"");
+  if(ns.includes("Rare")) return "is-rare";
+  if(ns.includes("Projected")) return "is-projected";
+  if(ns.includes("Hoarded")) return "is-hoarded";
   return "";
 }
-function getBgCls(cc){return cc?cc.replace("is-",""):"default";}
-function tagPills(tags,allTags){
-  if(!tags?.length) return "";
-  return tags.map(t=>{
-    const d=allTags.find(a=>a.id===t.tagId);if(!d) return "";
-    const c=TAG_PILL_CLS[TAG_TO_CLS[d.name]||"hoarded"];
-    return `<span class="tpill ${c}">${esc(d.name)}</span>`;
+function bgCls(cc){return cc?cc.replace("is-",""):"default";}
+function tagPills(tags,at){
+  return (tags||[]).map(t=>{
+    const d=at.find(a=>a.id===t.tagId);if(!d) return "";
+    return `<span class="tpill ${PILL_CLS[TAG_CLS[d.name]||"hoarded"]}">${esc(d.name)}</span>`;
   }).join("");
 }
-function cornerPips(tags,allTags){
-  if(!tags?.length) return "";
-  return tags.map(t=>{
-    const d=allTags.find(a=>a.id===t.tagId);if(!d) return "";
-    return `<span class="cpip ${CPIP_CLS[TAG_TO_CLS[d.name]||"hoarded"]||"hoarded"}"></span>`;
+function pips(tags,at){
+  return (tags||[]).map(t=>{
+    const d=at.find(a=>a.id===t.tagId);if(!d) return "";
+    return `<span class="cpip ${PIP_CLS[TAG_CLS[d.name]||"hoarded"]||"hoarded"}"></span>`;
   }).join("");
 }
 
 // ── State ──
-let pg=1,totalPg=1,allTags=[],itemCache={};
-let fValued=false,fHoarded=false,fRare=false,fProjected=false,sq="";
-let offerItems=[],wantItems=[],tradeAds=[];
-try{tradeAds=JSON.parse(localStorage.getItem("pv3_trades")||"[]")}catch(e){}
+let pg=1, allPages=1, allTags=[], itemCache={};
+let fV=false,fH=false,fR=false,fP=false, sortBy="", sq="";
+let offerItems=[], wantItems=[];
+let discordUser=null;
+// Pre-fetched item list for picker search
+let allItemsFlat=[];
 
 // ── Nav ──
-document.querySelectorAll(".nav-tab").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    document.querySelectorAll(".nav-tab").forEach(b=>b.classList.remove("active"));
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById("page-"+btn.dataset.page).classList.add("active");
+document.querySelectorAll(".ntab").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".ntab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    document.getElementById("page-"+b.dataset.page).classList.add("active");
+    if(b.dataset.page==="trades") loadTrades();
   });
 });
 
-document.getElementById("global-search").addEventListener("keydown",e=>{
-  if(e.key!=="Enter") return;
-  const q=e.target.value.trim();if(!q) return;
-  document.getElementById("item-search").value=q;
-  sq=q;pg=1;
-  document.querySelectorAll(".nav-tab").forEach(b=>b.classList.remove("active"));
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.querySelector('[data-page="items"]').classList.add("active");
-  document.getElementById("page-items").classList.add("active");
-  loadItems();
-});
-
-let st;
-document.getElementById("item-search").addEventListener("input",e=>{clearTimeout(st);st=setTimeout(()=>{sq=e.target.value.trim();pg=1;loadItems();},300);});
-
-["valued","hoarded","rare","projected"].forEach(k=>{
-  document.getElementById("chip-"+k).addEventListener("click",function(){
-    if(k==="valued")fValued=!fValued,this.classList.toggle("active",fValued);
-    if(k==="hoarded")fHoarded=!fHoarded,this.classList.toggle("active",fHoarded);
-    if(k==="rare")fRare=!fRare,this.classList.toggle("active",fRare);
-    if(k==="projected")fProjected=!fProjected,this.classList.toggle("active",fProjected);
-    pg=1;loadItems();
-  });
-});
-document.getElementById("btn-prev").addEventListener("click",()=>{if(pg>1){pg--;loadItems();}});
-document.getElementById("btn-next").addEventListener("click",()=>{if(pg<totalPg){pg++;loadItems();}});
-
-// ── Fetch helpers ──
-async function apiFetch(path, body){
-  const opts={method:body?"POST":"GET",headers:{"content-type":"application/json","referer":"https://polytoria.trade/","origin":"https://polytoria.trade"}};
-  if(body) opts.body=JSON.stringify(body);
-  const r=await fetch(T+path,opts);
-  if(!r.ok) throw new Error("HTTP "+r.status);
-  return r.json();
+// check auth on load
+async function checkAuth(){
+  try{
+    const r=await fetch(API+"/auth/me",{credentials:"include"});
+    const d=await r.json();
+    discordUser=d.loggedIn?d:null;
+    renderAuthArea();
+    renderPostForm();
+  }catch(e){renderAuthArea();}
 }
 
+function renderAuthArea(){
+  const el=document.getElementById("auth-area");
+  if(!discordUser){
+    el.innerHTML=`<a href="${API}/auth/discord" class="discord-btn">
+      <svg width="14" height="11" viewBox="0 0 24 18" fill="currentColor"><path d="M20.317 1.492a19.82 19.82 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 1.492a.07.07 0 0 0-.032.027C.533 6.036-.32 10.444.099 14.796a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+      Login
+    </a>`;
+  } else {
+    el.innerHTML=`<div class="user-pill">
+      ${discordUser.avatarUrl?`<img class="user-av" src="${esc(discordUser.avatarUrl)}" onerror="this.style.display='none'">`:`<div class="user-av" style="display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${esc(discordUser.username[0].toUpperCase())}</div>`}
+      <span class="user-name">${esc(discordUser.username)}</span>
+      <button class="discord-btn out" onclick="logout()" style="padding:4px 9px;font-size:11px">Out</button>
+    </div>`;
+  }
+}
+
+async function logout(){
+  await fetch(API+"/auth/logout",{method:"POST",credentials:"include"});
+  discordUser=null; renderAuthArea(); renderPostForm();
+}
+
+function renderPostForm(){
+  document.getElementById("login-prompt").style.display=discordUser?"none":"block";
+  document.getElementById("post-form").style.display=discordUser?"block":"none";
+}
+
+// handle ?auth= param on redirect
+(()=>{
+  const p=new URLSearchParams(location.search);
+  if(p.has("auth")){history.replaceState({},"",location.pathname);}
+})();
+
+// ── Fetch items ──
 async function fetchPage(page,search){
-  const j=await apiFetch("getItemsByPage?batch=1",{"0":{page,total:24,search:search||"",homepage:false}});
-  return j[0].result.data;
-}
-
-async function fetchItemGraph(id){
-  // GET endpoint - input in query string
-  const input=encodeURIComponent(JSON.stringify({"0":Number(id),"1":Number(id)}));
-  const url=T+`getItemWithTags,getItemGraph?batch=1&input=${input}`;
-  const r=await fetch(url,{headers:{"content-type":"application/json","referer":"https://polytoria.trade/store/"+id,"origin":"https://polytoria.trade"}});
+  const body={"0":{page,total:24,search:search||"",homepage:false}};
+  const r=await fetch(T+"getItemsByPage?batch=1",{
+    method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify(body)
+  });
   if(!r.ok) throw new Error("HTTP "+r.status);
-  return r.json();
+  return (await r.json())[0].result.data;
 }
 
-async function fetchOwners(id){
-  const input=encodeURIComponent(JSON.stringify({"0":Number(id),"1":Number(id)}));
-  const url=T+`getAllItemOwners,getRecentItemHistory?batch=1&input=${input}`;
-  const r=await fetch(url,{headers:{"content-type":"application/json","referer":"https://polytoria.trade/store/"+id,"origin":"https://polytoria.trade"}});
-  if(!r.ok) throw new Error("HTTP "+r.status);
-  return r.json();
+// Pre-load items for picker search (loads first 6 pages in background)
+async function preloadItems(){
+  if(allItemsFlat.length>0) return;
+  try{
+    // fetch pages 1-6 silently
+    for(let p=1;p<=6;p++){
+      const d=await fetchPage(p,"");
+      if(allTags.length===0) allTags=d.allTags||[];
+      (d.items||[]).forEach(i=>{itemCache[i.id]=i;});
+      allItemsFlat=[...new Map([...allItemsFlat,...(d.items||[])].map(i=>[i.id,i])).values()];
+      if(p>=d.totalPages) break;
+    }
+  }catch(e){}
 }
 
-// ── Load items ──
+// ── Load items tab ──
 async function loadItems(){
   const grid=document.getElementById("items-grid");
-  // skeleton
-  grid.innerHTML=Array(12).fill(`<div class="item-card" style="pointer-events:none">
-    <div style="aspect-ratio:1"><div class="skeleton" style="width:100%;height:100%"></div></div>
-    <div class="item-info"><div class="skeleton" style="height:12px;width:80%;margin-bottom:8px"></div><div class="skeleton" style="height:10px;width:50%"></div></div>
+  grid.innerHTML=Array(12).fill(0).map(()=>`<div class="icard" style="pointer-events:none">
+    <div style="aspect-ratio:1"><div style="width:100%;height:100%;background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite"></div></div>
+    <div class="icard-body"><div style="height:11px;border-radius:5px;background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;margin-bottom:6px;width:75%"></div><div style="height:9px;border-radius:5px;background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;width:50%"></div></div>
   </div>`).join("");
+
   try{
     const data=await fetchPage(pg,sq);
-    allTags=data.allTags||[];totalPg=data.totalPages||1;
+    allTags=data.allTags||[];
     let items=data.items||[];
+    let filteredTotal=data.totalPages||1;
+
+    // Client-side filters
+    const needsFilter=fV||fH||fR||fP;
+    if(needsFilter){
+      items=items.filter(i=>{
+        if(fV&&!i.stats?.value) return false;
+        if(fH&&!hasTag(i,"Hoarded")) return false;
+        if(fR&&!hasTag(i,"Rare")) return false;
+        if(fP&&!hasTag(i,"Projected")) return false;
+        return true;
+      });
+      filteredTotal=1;
+    }
+
+    // Sort
+    if(sortBy==="rap-desc") items.sort((a,b)=>(b.recentAverage||0)-(a.recentAverage||0));
+    else if(sortBy==="rap-asc") items.sort((a,b)=>(a.recentAverage||0)-(b.recentAverage||0));
+    else if(sortBy==="val-desc") items.sort((a,b)=>(b.stats?.value||0)-(a.stats?.value||0));
+    else if(sortBy==="val-asc") items.sort((a,b)=>(a.stats?.value||0)-(b.stats?.value||0));
+
     items.forEach(i=>itemCache[i.id]=i);
-    if(fValued) items=items.filter(i=>i.stats?.value!=null);
-    if(fHoarded) items=items.filter(i=>hasTag(i,"Hoarded"));
-    if(fRare) items=items.filter(i=>hasTag(i,"Rare"));
-    if(fProjected) items=items.filter(i=>hasTag(i,"Projected"));
+    allPages=data.totalPages||1;
+
     grid.innerHTML="";
-    if(!items.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">◈</div><h3>Nothing here</h3><p>Try different filters</p></div>';return;}
-    items.forEach(item=>{
-      const w=document.createElement("div");
-      w.innerHTML=renderCard(item);
-      grid.appendChild(w.firstChild);
-    });
-    const t=`Page ${pg} / ${totalPg}`;
-    document.getElementById("pginfo").textContent=t;
-    document.getElementById("pginfo2").textContent=t;
+    if(!items.length){
+      grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-ico">◈</div><h3>No items match</h3><p>Try different filters or search terms</p></div>`;
+    } else {
+      items.forEach(item=>{const w=document.createElement("div");w.innerHTML=renderCard(item);grid.appendChild(w.firstChild);});
+    }
+
+    const filterNote=needsFilter?" (filtered)":"";
+    const pgTxt=`Page ${pg} / ${data.totalPages}${filterNote}`;
+    document.getElementById("pginfo").textContent=pgTxt;
+    document.getElementById("pginfo2").textContent=pgTxt;
     document.getElementById("btn-prev").style.display=pg>1?"":"none";
-    document.getElementById("btn-next").style.display=pg<totalPg?"":"none";
-  }catch(e){grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">⚠</div><h3>Load failed</h3><p>${esc(e.message)}</p></div>`;}
+    document.getElementById("btn-next").style.display=pg<data.totalPages?"":"none";
+  }catch(e){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-ico">⚠</div><h3>Failed to load</h3><p>${esc(e.message)}</p></div>`;
+  }
 }
 
-function hasTag(item,name){return item.tags?.some(t=>allTags.find(a=>a.id===t.tagId)?.name===name);}
+function hasTag(item,name){return (item.tags||[]).some(t=>allTags.find(a=>a.id===t.tagId)?.name===name);}
 
 function renderCard(item){
-  const cc=getCardCls(item.tags,allTags);
-  const bg=getBgCls(cc);
-  const pips=cornerPips(item.tags,allTags);
-  const pills=tagPills(item.tags,allTags);
-  return `<div class="item-card ${cc}" onclick="openModal(${item.id})">
-    <div class="item-img-wrap bg-${bg}">
-      <img class="item-img" src="${esc(item.thumbnailUrl||"")}" loading="lazy" alt="" onerror="this.style.opacity=.15">
-      ${pips?`<div class="corner-pips">${pips}</div>`:""}
+  const cc=cardClass(item.tags,allTags);
+  const bg=bgCls(cc);
+  const pp=pips(item.tags,allTags);
+  const tp=tagPills(item.tags,allTags);
+  return `<div class="icard ${cc}" onclick="openModal(${item.id})">
+    <div class="img-wrap bg-${bg}">
+      <img class="icard-img" src="${esc(item.thumbnailUrl||"")}" loading="lazy" alt="" onerror="this.style.opacity=.12">
+      ${pp?`<div class="cpips">${pp}</div>`:""}
     </div>
-    <div class="item-info">
-      <div class="item-name" title="${esc(item.name)}">${esc(item.name)}</div>
-      ${item.shorthand?`<div class="item-aka">${esc(item.shorthand)}</div>`:""}
-      <div class="item-nums">
-        <div class="item-rap">${item.recentAverage!=null?num(item.recentAverage):"—"}</div>
-        ${item.stats?.value!=null?`<div class="item-val-wrap"><div class="item-val-lbl">val</div><div class="item-val-num">${num(item.stats.value)}</div></div>`:""}
+    <div class="icard-body">
+      <div class="icard-name" title="${esc(item.name)}">${esc(item.name)}</div>
+      ${item.shorthand?`<div class="icard-aka">${esc(item.shorthand)}</div>`:""}
+      <div class="icard-nums">
+        <div class="icard-rap">${item.recentAverage!=null?num(item.recentAverage):"—"}</div>
+        ${item.stats?.value!=null?`<div class="icard-val"><div class="icard-vl">val</div><div class="icard-vn">${num(item.stats.value)}</div></div>`:""}
       </div>
-      ${pills?`<div class="item-tag-row">${pills}</div>`:""}
+      ${tp?`<div class="itags">${tp}</div>`:""}
     </div>
   </div>`;
 }
 
+// Filter chips
+const chips=[["v",()=>fV=!fV],["h",()=>fH=!fH],["r",()=>fR=!fR],["p",()=>fP=!fP]];
+chips.forEach(([k,tog])=>{
+  document.getElementById("chip-"+k).addEventListener("click",function(){tog();this.classList.toggle("on",{v:fV,h:fH,r:fR,p:fP}[k]);pg=1;loadItems();});
+});
+document.getElementById("sort-sel").addEventListener("change",function(){sortBy=this.value;loadItems();});
+document.getElementById("btn-prev").addEventListener("click",()=>{if(pg>1){pg--;loadItems();}});
+document.getElementById("btn-next").addEventListener("click",()=>{if(pg<allPages){pg++;loadItems();}});
+
+// Item search
+let st;
+document.getElementById("item-search").addEventListener("input",e=>{clearTimeout(st);st=setTimeout(()=>{sq=e.target.value.trim();pg=1;loadItems();},300);});
+
+// ── Global search with preview ──
+let gst, gPreviewItems=[];
+const gInput=document.getElementById("gsearch");
+const gPreview=document.getElementById("search-preview");
+
+gInput.addEventListener("input",e=>{
+  const q=e.target.value.trim();
+  clearTimeout(gst);
+  if(!q){gPreview.classList.remove("show");return;}
+  gst=setTimeout(()=>showSearchPreview(q),250);
+});
+
+async function showSearchPreview(q){
+  try{
+    const data=await fetchPage(1,q);
+    if(allTags.length===0) allTags=data.allTags||[];
+    const items=(data.items||[]).slice(0,5);
+    gPreviewItems=items;
+    items.forEach(i=>itemCache[i.id]=i);
+    if(!items.length){gPreview.innerHTML=`<div class="pd-none">No results for "${esc(q)}"</div>`;gPreview.classList.add("show");return;}
+    gPreview.innerHTML=items.map(i=>`
+      <div class="sp-item" onclick="gotoItem(${i.id})">
+        <img src="${esc(i.thumbnailUrl||"")}" onerror="this.style.opacity=.15">
+        <div class="sp-item-info">
+          <div class="sp-name">${esc(i.name)}</div>
+          <div class="sp-rap">${i.recentAverage!=null?num(i.recentAverage)+" RAP":""}</div>
+        </div>
+      </div>`).join("")+
+      `<div class="sp-more" onclick="searchAll('${esc(q)}')">See all results for "${esc(q)}" →</div>`;
+    gPreview.classList.add("show");
+  }catch(e){}
+}
+
+window.gotoItem=function(id){
+  gPreview.classList.remove("show");gInput.value="";
+  document.querySelectorAll(".ntab").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelector('[data-page="items"]').classList.add("active");
+  document.getElementById("page-items").classList.add("active");
+  openModal(id);
+};
+
+window.searchAll=function(q){
+  gPreview.classList.remove("show");gInput.value="";
+  document.querySelectorAll(".ntab").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelector('[data-page="items"]').classList.add("active");
+  document.getElementById("page-items").classList.add("active");
+  document.getElementById("item-search").value=q;
+  sq=q;pg=1;loadItems();
+};
+
+document.addEventListener("click",e=>{if(!e.target.closest(".gsearch-wrap"))gPreview.classList.remove("show");});
+
 // ── Modal ──
 window.openModal=async function(id){
-  const overlay=document.getElementById("modal-overlay");
+  const ov=document.getElementById("modal-ov");
   const box=document.getElementById("modal-box");
   const content=document.getElementById("modal-content");
-  overlay.classList.add("open");
+  ov.classList.add("open");
   box.className="modal";
-
-  // Show spinner immediately while we fetch
-  const cached=itemCache[id];
-  const cc=cached?getCardCls(cached.tags,allTags):"";
-  if(cc) box.className="modal "+cc;
-  content.innerHTML=`<div style="padding:60px 0;display:flex;align-items:center;justify-content:center"><div class="spinner"></div></div>`;
+  content.innerHTML=`<div style="padding:60px;display:flex;align-items:center;justify-content:center"><div class="spinner"></div></div>`;
 
   try{
-    const [graphRes,ownersRes]=await Promise.all([fetchItemGraph(id),fetchOwners(id)]);
-    const graphData=graphRes[1]?.result?.data||[];
-    const ownersData=ownersRes[0]?.result?.data||[];
-    const item=graphRes[0]?.result?.data||cached;
+    // Fetch graph + item data
+    const input=encodeURIComponent(JSON.stringify({"0":Number(id),"1":Number(id)}));
+    const [graphR,ownerR]=await Promise.all([
+      fetch(T+`getItemWithTags,getItemGraph?batch=1&input=${input}&itemid=${id}`,{
+        headers:{"content-type":"application/json"}
+      }),
+      fetch(T+`getAllItemOwners,getRecentItemHistory?batch=1&input=${input}&itemid=${id}`,{
+        headers:{"content-type":"application/json"}
+      })
+    ]);
+
+    const gj=await graphR.json();
+    const oj=await ownerR.json();
+    const item=gj[0]?.result?.data || itemCache[id];
+    const graph=gj[1]?.result?.data||[];
+    const owners=oj[0]?.result?.data||[];
+
     if(item) itemCache[item.id]=item;
-    const finalCc=getCardCls(item?.tags||[],allTags);
-    box.className="modal"+(finalCc?" "+finalCc:"");
-    renderModalFull(item||cached,content,finalCc,graphData,ownersData);
+    const cc=cardClass(item?.tags||[],allTags);
+    box.className="modal"+(cc?" "+cc:"");
+    renderModal(item||itemCache[id],content,cc,graph,owners);
   }catch(e){
-    // fallback to cached data with empty graph
-    const item=cached;
-    if(item){
-      const finalCc=getCardCls(item.tags||[],allTags);
-      box.className="modal"+(finalCc?" "+finalCc:"");
-      renderModalFull(item,content,finalCc,[],[]);
-    } else {
-      content.innerHTML=`<div style="padding:40px;text-align:center;color:var(--txt3)">Failed to load item</div>`;
-    }
+    const item=itemCache[id];
+    if(item){const cc=cardClass(item.tags||[],allTags);box.className="modal"+(cc?" "+cc:"");renderModal(item,content,cc,[],[]);}
+    else content.innerHTML=`<div style="padding:40px;text-align:center;color:var(--txt3)">Failed to load item</div>`;
   }
 };
 
-function renderModalFull(item,content,cc,graphData,ownersData){
-  const bg=getBgCls(cc);
+function renderModal(item,content,cc,graph,owners){
+  const bg=bgCls(cc);
   const demand=item?.stats?.demand||"";
   const trend=item?.stats?.trend||"";
-  const pills=tagPills(item?.tags||[],allTags);
+  const tp=tagPills(item?.tags||[],allTags);
+  const rapVsVal=(item?.stats?.value&&item?.recentAverage)?
+    Math.round((item.recentAverage-item.stats.value)/item.stats.value*100):null;
 
   content.innerHTML=`
     <div class="modal-hero fade-up">
-      <div class="modal-thumb-wrap bg-${bg}">
-        <img class="modal-thumb" src="${esc(item?.thumbnailUrl||"")}" alt="" onerror="this.style.opacity=.15">
-      </div>
+      <div class="modal-thumb mt-${bg}"><img src="${esc(item?.thumbnailUrl||"")}" alt="" onerror="this.style.opacity=.1"></div>
       <div class="modal-meta">
         <div class="modal-name">${esc(item?.name||"")}</div>
         ${item?.shorthand?`<div class="modal-aka">aka ${esc(item.shorthand)}</div>`:""}
-        <div class="modal-badges">
-          ${pills}
-          ${demand?`<span class="badge b-demand-${demand}">
-            ${demand==="high"?svgIcon("trending-up"):demand==="low"?svgIcon("trending-down"):svgIcon("minus")}
-            ${esc(demand)}
-          </span>`:""}
-          ${trend?`<span class="badge b-trend-${trend}">
-            ${trend==="rising"?svgIcon("arrow-up"):trend==="unstable"?svgIcon("zap"):svgIcon("minus")}
-            ${esc(trend)}
-          </span>`:""}
+        <div class="badges">
+          ${tp}
+          ${demand?`<span class="badge bd-${demand}">${demand==="high"?'↑':demand==="low"?'↓':'→'} ${esc(demand)} demand</span>`:""}
+          ${trend?`<span class="badge bd-${trend}">${trend==="rising"?'📈':trend==="unstable"?'⚡':'―'} ${esc(trend)}</span>`:""}
         </div>
-        ${item?.stats?.funFact?`<div class="funfact">${esc(item.stats.funFact)}</div>`:""}
+        ${item?.stats?.funFact?`<div class="funfact">💡 ${esc(item.stats.funFact)}</div>`:""}
       </div>
     </div>
-    <div class="stat-row fade-up" style="animation-delay:.05s">
-      <div class="stat-box">
-        <div class="stat-val" style="color:var(--green)">${num(item?.recentAverage)}</div>
-        <div class="stat-lbl">RAP</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" style="color:var(--accent2)">${item?.stats?.value!=null?num(item.stats.value):"—"}</div>
-        <div class="stat-lbl">Est. Value</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" style="font-size:13px;color:${demand==="high"?"var(--green)":demand==="low"?"var(--red)":"var(--txt2)"}">${demand||"—"}</div>
-        <div class="stat-lbl">Demand</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" style="font-size:13px;color:${trend==="rising"?"var(--green)":trend==="unstable"?"var(--red)":"var(--txt2)"}">${trend||"—"}</div>
-        <div class="stat-lbl">Trend</div>
-      </div>
+    <div class="stat-row fade-up" style="animation-delay:.04s">
+      <div class="sbox"><div class="sval" style="color:var(--green)">${num(item?.recentAverage)}</div><div class="slbl">RAP</div></div>
+      <div class="sbox"><div class="sval" style="color:var(--accent2)">${item?.stats?.value!=null?num(item.stats.value):"—"}</div><div class="slbl">Est. Value</div></div>
+      <div class="sbox"><div class="sval" style="font-size:13px;color:${demand==="high"?"var(--green)":demand==="low"?"var(--red)":"var(--txt2)"}">${demand||"—"}</div><div class="slbl">Demand</div></div>
+      <div class="sbox"><div class="sval" style="font-size:13px;color:${trend==="rising"?"var(--green)":trend==="unstable"?"var(--red)":"var(--txt2)"}">${trend||"—"}</div><div class="slbl">Trend</div></div>
     </div>
-    <div class="graph-section fade-up" style="animation-delay:.1s">
-      <div class="graph-header">
-        <div class="graph-title">${svgIcon("activity")} RAP History
-          <span class="graph-pill">${graphData.length} data points</span>
+    ${rapVsVal!==null?`
+    <div style="padding:0 26px 18px">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+          <span style="font-size:11px;color:var(--txt3)">RAP vs Est. Value</span>
+          <span style="font-family:'Space Mono';font-size:12px;font-weight:700;color:${rapVsVal>0?"var(--green)":"var(--red)"}">${rapVsVal>0?"▲":"▼"} ${Math.abs(rapVsVal)}%</span>
+        </div>
+        <div style="height:4px;background:var(--bg);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${Math.min(100,Math.abs(rapVsVal))}%;background:${rapVsVal>0?"var(--green)":"var(--red)"};border-radius:2px"></div>
         </div>
       </div>
-      <div class="graph-wrap" id="modal-graph"></div>
+    </div>`:""}
+    <div class="gsec fade-up" style="animation-delay:.08s">
+      <div class="ghdr">
+        <div class="gtitle">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          RAP History
+          <span class="gpill">${graph.length} pts</span>
+        </div>
+      </div>
+      <div class="gwrap${graph.length<2?" skel":""}" id="m-graph"></div>
     </div>
-    ${ownersData.length?`
-    <div class="owners-section fade-up" style="animation-delay:.15s">
-      <div class="owners-title">${svgIcon("users")} Owners <span class="graph-pill">${ownersData.length} unique</span></div>
-      <div class="owners-row">${ownersData.slice(0,12).map(o=>`
-        <div class="owner-chip">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--txt3)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-          <span>${esc(o.username||o.userId)}</span>
-          <span class="owner-count">×${o.count||1}</span>
+    ${owners.length?`
+    <div class="own-sec fade-up" style="animation-delay:.12s">
+      <div class="own-title">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Owners <span class="gpill">${owners.length}</span>
+      </div>
+      <div class="own-row">${owners.slice(0,10).map(o=>`
+        <div class="own-chip" onclick="lookupPlayer('${esc(String(o.username||o.userId||""))}')">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--txt3)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          ${esc(o.username||"User "+o.userId)}${o.count>1?` <span style="color:var(--txt3);font-family:'Space Mono';font-size:9px">×${o.count}</span>`:""}
         </div>`).join("")}
       </div>
     </div>`:""}
-    <div class="modal-divider"></div>
-    <div class="modal-links fade-up" style="animation-delay:.2s">
-      <a href="https://polytoria.com/store/${item?.id}" target="_blank" class="btn btn-primary" style="text-decoration:none;flex:1;justify-content:center">
-        ${svgIcon("external-link")} View on Polytoria
-      </a>
-      <a href="https://polytoria.trade/store/${item?.id}" target="_blank" class="btn btn-ghost" style="text-decoration:none">
-        polytoria.trade ↗
-      </a>
+    <div class="mdivider"></div>
+    <div class="mlinks fade-up" style="animation-delay:.14s">
+      <a href="https://polytoria.com/store/${item?.id}" target="_blank" class="btn btn-p" style="text-decoration:none;flex:1;justify-content:center">View on Polytoria</a>
+      <a href="https://polytoria.trade/store/${item?.id}" target="_blank" class="btn btn-g" style="text-decoration:none">polytoria.trade ↗</a>
     </div>`;
 
-  // Draw graph
-  if(graphData.length>1){
-    drawGraph(document.getElementById("modal-graph"), graphData, cc);
-  } else if(graphData.length===0){
-    document.getElementById("modal-graph").innerHTML=`<div class="empty" style="padding:32px"><p>No historical data yet</p></div>`;
+  if(graph.length>=2){
+    // defer one frame so DOM is painted and offsetWidth is real
+    requestAnimationFrame(()=>requestAnimationFrame(()=>drawGraph(document.getElementById("m-graph"),graph,cc)));
+  } else if(graph.length<2){
+    const g=document.getElementById("m-graph");
+    if(g) g.innerHTML=`<div class="empty" style="padding:28px"><p style="color:var(--txt3);font-size:12px">No historical data yet</p></div>`;
   }
 }
 
-// ── SVG Graph ──
-function drawGraph(container, rawData, cc){
-  const W=container.clientWidth||640;
-  const H=container.clientHeight||150;
-  const PAD={top:14,right:16,bottom:28,left:52};
+// ── Graph ──
+function drawGraph(el,raw,cc){
+  if(!el) return;
+  const W=el.clientWidth||640, H=el.clientHeight||155;
+  const PAD={t:12,r:14,b:26,l:50};
 
-  // Sort by date
-  const pts=rawData.map(d=>({
+  const pts=raw.map(d=>({
     t:new Date(d.date||d.createdAt||d.timestamp||0).getTime(),
-    v:Number(d.value||d.averagePrice||d.rap||0)
-  })).filter(d=>d.t>0&&d.v>0).sort((a,b)=>a.t-b.t);
+    v:Number(d.value||d.averagePrice||d.rap||d.recentAveragePrice||0)
+  })).filter(d=>d.t>100&&d.v>0).sort((a,b)=>a.t-b.t);
 
-  if(pts.length<2){container.innerHTML=`<div class="empty" style="padding:32px"><p>Not enough data</p></div>`;return;}
+  if(pts.length<2){el.innerHTML=`<div class="empty" style="padding:28px"><p style="color:var(--txt3);font-size:12px">Not enough data</p></div>`;return;}
 
-  const minV=Math.min(...pts.map(p=>p.v))*0.95;
-  const maxV=Math.max(...pts.map(p=>p.v))*1.05;
+  const minV=Math.min(...pts.map(p=>p.v))*0.93;
+  const maxV=Math.max(...pts.map(p=>p.v))*1.07;
   const minT=pts[0].t, maxT=pts[pts.length-1].t;
+  const xS=t=>PAD.l+(t-minT)/Math.max(maxT-minT,1)*(W-PAD.l-PAD.r);
+  const yS=v=>PAD.t+(1-(v-minV)/Math.max(maxV-minV,1))*(H-PAD.t-PAD.b);
+  const clr=cc==="is-rare"?"#b8adff":cc==="is-hoarded"?"#ffcc55":cc==="is-projected"?"#f06858":"#7c6df0";
 
-  const xS=t=>PAD.left+(t-minT)/(maxT-minT||1)*(W-PAD.left-PAD.right);
-  const yS=v=>PAD.top+(1-(v-minV)/(maxV-minV||1))*(H-PAD.top-PAD.bottom);
+  // Smooth bezier path
+  function bezierPath(pts){
+    if(pts.length<2) return "";
+    let d=`M${xS(pts[0].t).toFixed(1)},${yS(pts[0].v).toFixed(1)}`;
+    for(let i=1;i<pts.length;i++){
+      const x0=xS(pts[i-1].t),y0=yS(pts[i-1].v);
+      const x1=xS(pts[i].t),y1=yS(pts[i].v);
+      const cx=(x0+x1)/2;
+      d+=` C${cx.toFixed(1)},${y0.toFixed(1)} ${cx.toFixed(1)},${y1.toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)}`;
+    }
+    return d;
+  }
 
-  const color=cc==="is-rare"?"#b8adff":cc==="is-hoarded"?"#ffcc55":cc==="is-projected"?"#f06858":"#7c6df0";
+  const linePath=bezierPath(pts);
+  const lastX=xS(pts[pts.length-1].t), firstX=xS(pts[0].t), botY=yS(minV);
+  const areaPath=linePath+` L${lastX.toFixed(1)},${botY.toFixed(1)} L${firstX.toFixed(1)},${botY.toFixed(1)} Z`;
 
-  const pathD=pts.map((p,i)=>`${i===0?"M":"L"}${xS(p.t).toFixed(1)},${yS(p.v).toFixed(1)}`).join(" ");
-  const areaD=pathD+` L${xS(maxT).toFixed(1)},${yS(minV).toFixed(1)} L${xS(minT).toFixed(1)},${yS(minV).toFixed(1)} Z`;
+  const ticks=[0,.25,.5,.75,1].map(f=>minV+f*(maxV-minV));
+  const tickSvg=ticks.map(v=>`
+    <line x1="${PAD.l}" y1="${yS(v).toFixed(1)}" x2="${W-PAD.r}" y2="${yS(v).toFixed(1)}" stroke="var(--bg5)" stroke-width="1"/>
+    <text x="${PAD.l-5}" y="${(yS(v)+3.5).toFixed(1)}" fill="var(--txt3)" font-size="8" text-anchor="end" font-family="Space Mono,monospace">${shortNum(v)}</text>`).join("");
 
-  // Y-axis ticks
-  const yTicks=[0,.25,.5,.75,1].map(f=>minV+f*(maxV-minV));
-  const yTickSvg=yTicks.map(v=>`
-    <line x1="${PAD.left}" y1="${yS(v).toFixed(1)}" x2="${W-PAD.right}" y2="${yS(v).toFixed(1)}" stroke="var(--bg5)" stroke-width="1"/>
-    <text x="${PAD.left-6}" y="${(yS(v)+4).toFixed(1)}" fill="var(--txt3)" font-size="9" text-anchor="end" font-family="Space Mono">${shortNum(v)}</text>`).join("");
-
-  container.innerHTML=`<svg class="graph-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+  el.innerHTML=`<svg class="gsvg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
     <defs>
-      <linearGradient id="gfill" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${color}" stop-opacity="0.5"/>
-        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+      <linearGradient id="gfill_${el.id||'g'}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${clr}" stop-opacity=".55"/>
+        <stop offset="100%" stop-color="${clr}" stop-opacity="0"/>
       </linearGradient>
     </defs>
-    ${yTickSvg}
-    <path d="${areaD}" fill="url(#gfill)" class="graph-area"/>
-    <path d="${pathD}" stroke="${color}" class="graph-line"/>
-    ${pts.map((p,i)=>{
-      if(i===0||i===pts.length-1||i%Math.ceil(pts.length/8)===0)
-        return `<circle cx="${xS(p.t).toFixed(1)}" cy="${yS(p.v).toFixed(1)}" r="3" fill="${color}" stroke="var(--bg2)" stroke-width="1.5"/>`;
-      return "";
-    }).join("")}
+    ${tickSvg}
+    <path d="${areaPath}" fill="url(#gfill_${el.id||'g'})" class="garea"/>
+    <path d="${linePath}" stroke="${clr}" class="gline"/>
+    ${pts.filter((_,i)=>i===0||i===pts.length-1||i%Math.ceil(pts.length/6)===0).map(p=>
+      `<circle cx="${xS(p.t).toFixed(1)}" cy="${yS(p.v).toFixed(1)}" r="3" fill="${clr}" stroke="var(--bg2)" stroke-width="1.5"/>`
+    ).join("")}
   </svg>`;
 
-  // Hover interaction
-  const svg=container.querySelector("svg");
-  const tip=document.getElementById("graph-tooltip");
-  const cross=document.getElementById("graph-crosshair");
-
+  const svg=el.querySelector("svg");
+  const tip=document.getElementById("gtip");
+  const cross=document.getElementById("gcross");
   svg.addEventListener("mousemove",e=>{
-    const rect=container.getBoundingClientRect();
-    const mx=e.clientX-rect.left;
-    const pct=(mx-PAD.left)/(W-PAD.left-PAD.right);
+    const rc=el.getBoundingClientRect();
+    const pct=Math.max(0,Math.min(1,(e.clientX-rc.left-PAD.l)/(W-PAD.l-PAD.r)));
     const t=minT+pct*(maxT-minT);
-    // Find nearest point
     const near=pts.reduce((a,b)=>Math.abs(b.t-t)<Math.abs(a.t-t)?b:a);
-    const px=xS(near.t);
-    const py=yS(near.v);
-    const date=new Date(near.t).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
-    tip.innerHTML=`<div style="font-family:'Space Mono',monospace;font-size:11px;color:${color};font-weight:700">${num(near.v)}</div><div style="font-size:10px;color:var(--txt3);margin-top:2px">${date}</div>`;
+    const px=rc.left+xS(near.t), py=rc.top+yS(near.v);
+    const dt=new Date(near.t).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+    tip.innerHTML=`<span style="font-family:'Space Mono',monospace;font-size:11px;color:${clr};font-weight:700">${num(near.v)}</span><br><span style="font-size:9px;color:var(--txt3)">${dt}</span>`;
     tip.classList.add("show");
-    const tipW=tip.offsetWidth,tipH=tip.offsetHeight;
-    tip.style.left=(rect.left+px-tipW/2)+"px";
-    tip.style.top=(rect.top+py-tipH-10)+"px";
+    tip.style.left=(px-tip.offsetWidth/2)+"px";
+    tip.style.top=(py-tip.offsetHeight-10)+"px";
     cross.style.display="block";
-    cross.style.left=(rect.left+px)+"px";
-    cross.style.top=rect.top+"px";
-    cross.style.height=rect.height+"px";
+    cross.style.left=px+"px"; cross.style.top=rc.top+"px"; cross.style.height=rc.height+"px";
   });
   svg.addEventListener("mouseleave",()=>{tip.classList.remove("show");cross.style.display="none";});
 }
 
-function shortNum(n){
-  if(n>=1e6) return (n/1e6).toFixed(1)+"M";
-  if(n>=1e3) return (n/1e3).toFixed(1)+"K";
-  return Math.round(n).toString();
+function shortNum(n){if(n>=1e6)return(n/1e6).toFixed(1)+"M";if(n>=1e3)return(n/1e3).toFixed(0)+"K";return Math.round(n)+""}
+
+function closeModal(){
+  document.getElementById("modal-ov").classList.remove("open");
+  document.getElementById("modal-box").className="modal";
+  document.getElementById("gtip").classList.remove("show");
+  document.getElementById("gcross").style.display="none";
 }
-
-// ── SVG icons ──
-const ICONS={
-  "activity":`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
-  "users":`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
-  "external-link":`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
-  "trending-up":`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
-  "trending-down":`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>`,
-  "minus":`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
-  "arrow-up":`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`,
-  "zap":`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
-};
-function svgIcon(name){return ICONS[name]||"";}
-
-// ── Close modal ──
-function closeModal(){document.getElementById("modal-overlay").classList.remove("open");document.getElementById("modal-box").className="modal";document.getElementById("graph-tooltip").classList.remove("show");}
-document.getElementById("modal-close").addEventListener("click",closeModal);
-document.getElementById("modal-overlay").addEventListener("click",e=>{if(e.target===e.currentTarget)closeModal();});
+document.getElementById("modal-x").addEventListener("click",closeModal);
+document.getElementById("modal-ov").addEventListener("click",e=>{if(e.target===e.currentTarget)closeModal();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 
-// ── Item picker for trade ads ──
-async function addItem(side){
-  const inp=document.getElementById(side+"-input");
-  const rawId=inp.value.trim();
-  if(!rawId){showErr("Enter an item ID.");return;}
-  const id=rawId.replace(/\D/g,""); // strip non-digits
-  if(!id){showErr("Item ID must be a number.");return;}
+// ── Picker search (for trade post) ──
+function setupPicker(side){
+  const inp=document.getElementById(side+"-search");
+  const drop=document.getElementById(side+"-drop");
+  const chips=document.getElementById(side+"-chips");
+  const lmt=document.getElementById(side+"-lmt");
   const list=side==="offer"?offerItems:wantItems;
-  if(list.find(i=>String(i.id)===id)){showErr("Already added.");return;}
+  let timer;
 
-  // check cache first
-  if(itemCache[id]){
-    list.push(itemCache[id]);
-    renderChips(side);
-    inp.value="";
-    showErr("");
-    return;
-  }
+  inp.addEventListener("input",()=>{
+    clearTimeout(timer);
+    const q=inp.value.trim();
+    if(!q){drop.classList.remove("show");return;}
+    timer=setTimeout(async()=>{
+      // search from cached flat list first
+      let results=allItemsFlat.filter(i=>i.name.toLowerCase().includes(q.toLowerCase())).slice(0,8);
+      if(!results.length){
+        // live search
+        try{const d=await fetchPage(1,q);results=(d.items||[]).slice(0,8);results.forEach(i=>itemCache[i.id]=i);}catch(e){}
+      }
+      if(!results.length){drop.innerHTML=`<div class="pd-none">No items found</div>`;drop.classList.add("show");return;}
+      drop.innerHTML=results.map(i=>`
+        <div class="pd-item" onclick="pickItem('${side}',${i.id})">
+          <img src="${esc(i.thumbnailUrl||"")}" onerror="this.style.opacity=.15">
+          <span class="pd-name">${esc(i.name)}</span>
+          <span class="pd-rap">${i.recentAverage!=null?num(i.recentAverage):""}</span>
+        </div>`).join("");
+      drop.classList.add("show");
+    },220);
+  });
 
-  inp.disabled=true;
-  showErr("");
-  const btn=document.getElementById(side+"-add");
-  btn.textContent="…";
-  try{
-    // Search by ID - use id as search query with enough results to find it
-    const j=await apiFetch("getItemsByPage?batch=1",{"0":{page:1,total:24,search:id,homepage:false}});
-    const data=j[0].result.data;
-    if(allTags.length===0&&data.allTags) allTags=data.allTags;
-    // Try exact ID match first
-    let item=(data.items||[]).find(i=>String(i.id)===id);
-    if(!item){
-      // Search didn't return it by ID - try fetching page 1 with a broader search won't work
-      // so tell user item not found
-      showErr(`No item with ID ${id} found. Double-check the ID on polytoria.com.`);
-      return;
-    }
-    itemCache[item.id]=item;
-    list.push(item);
-    renderChips(side);
-    inp.value="";
-  }catch(e){showErr("Error: "+e.message);}
-  finally{inp.disabled=false;btn.textContent="Add";}
+  document.addEventListener("click",e=>{if(!e.target.closest(`#${side}-search`)&&!e.target.closest(`#${side}-drop`))drop.classList.remove("show");});
 }
 
-function showErr(m){const e=document.getElementById("trade-err");e.textContent=m;e.style.display=m?"":"none";}
-
-document.getElementById("offer-add").addEventListener("click",()=>addItem("offer"));
-document.getElementById("want-add").addEventListener("click",()=>addItem("want"));
-document.getElementById("offer-input").addEventListener("keydown",e=>{if(e.key==="Enter")addItem("offer");});
-document.getElementById("want-input").addEventListener("keydown",e=>{if(e.key==="Enter")addItem("want");});
-
-function renderChips(side){
+window.pickItem=function(side,id){
   const list=side==="offer"?offerItems:wantItems;
-  document.getElementById(side+"-chips").innerHTML=list.map((it,i)=>`
+  const item=allItemsFlat.find(i=>i.id===id)||itemCache[id];
+  if(!item) return;
+  if(list.find(i=>i.id===id)) return;
+  if(list.length>=4){showTradeErr(`Max 4 items per side`);return;}
+  list.push(item);
+  renderPickerChips(side);
+  document.getElementById(side+"-search").value="";
+  document.getElementById(side+"-drop").classList.remove("show");
+  showTradeErr("");
+};
+
+function renderPickerChips(side){
+  const list=side==="offer"?offerItems:wantItems;
+  const el=document.getElementById(side+"-chips");
+  const lmt=document.getElementById(side+"-lmt");
+  el.innerHTML=list.map((it,i)=>`
     <div class="pchip">
       <img src="${esc(it.thumbnailUrl||"")}" onerror="this.style.opacity=.15">
-      <span class="pchip-name" title="${esc(it.name)}">${esc(it.name)}</span>
-      <button class="pchip-x" onclick="removeItem('${side}',${i})">×</button>
+      <span class="pchip-n" title="${esc(it.name)}">${esc(it.name)}</span>
+      <button class="pchip-x" onclick="unpickItem('${side}',${i})">×</button>
     </div>`).join("");
+  lmt.textContent=list.length>=4?"Max 4 items reached":"";
+  lmt.style.display=list.length>=4?"block":"none";
+  updateTradeLimitInfo();
 }
 
-window.removeItem=function(side,i){(side==="offer"?offerItems:wantItems).splice(i,1);renderChips(side);};
+window.unpickItem=function(side,i){(side==="offer"?offerItems:wantItems).splice(i,1);renderPickerChips(side);};
+
+function updateTradeLimitInfo(){
+  const el=document.getElementById("trade-limit-info");
+  if(!discordUser||!el) return;
+  // Will be updated when trades load
+}
+
+function showTradeErr(m){const e=document.getElementById("trade-err");e.textContent=m;e.style.display=m?"":"none";}
 
 // ── Post trade ──
-document.getElementById("trade-post").addEventListener("click",()=>{
-  const username=document.getElementById("trade-username").value.trim();
-  showErr("");
-  if(!offerItems.length||!wantItems.length){showErr("Add at least one item per side.");return;}
-  if(!username){showErr("Enter your username.");return;}
-  const snap=items=>items.map(i=>({id:i.id,name:i.name,thumbnailUrl:i.thumbnailUrl,rap:i.recentAverage,tags:i.tags,stats:i.stats}));
-  tradeAds.unshift({offer:snap(offerItems),want:snap(wantItems),username,time:Date.now()});
-  try{localStorage.setItem("pv3_trades",JSON.stringify(tradeAds));}catch(e){}
-  offerItems=[];wantItems=[];
-  renderChips("offer");renderChips("want");
-  document.getElementById("trade-username").value="";
-  renderTrades();
+document.getElementById("trade-post-btn").addEventListener("click",async()=>{
+  if(!discordUser){alert("Sign in with Discord first.");return;}
+  showTradeErr("");
+  if(!offerItems.length||!wantItems.length){showTradeErr("Add items to both sides.");return;}
+  const btn=document.getElementById("trade-post-btn");
+  btn.disabled=true; btn.textContent="Posting…";
+  try{
+    const r=await fetch(API+"/trades",{
+      method:"POST", credentials:"include",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({
+        offer:offerItems.map(i=>({id:i.id,name:i.name,thumbnailUrl:i.thumbnailUrl,rap:i.recentAverage,tags:i.tags,stats:i.stats})),
+        want: wantItems.map(i=>({id:i.id,name:i.name,thumbnailUrl:i.thumbnailUrl,rap:i.recentAverage,tags:i.tags,stats:i.stats}))
+      })
+    });
+    const d=await r.json();
+    if(!r.ok){showTradeErr(d.error||"Failed to post");return;}
+    offerItems=[];wantItems=[];
+    renderPickerChips("offer");renderPickerChips("want");
+    loadTrades();
+    // switch to trades page
+    document.querySelectorAll(".ntab").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.querySelector('[data-page="trades"]').classList.add("active");
+    document.getElementById("page-trades").classList.add("active");
+  }catch(e){showTradeErr(e.message);}
+  finally{btn.disabled=false;btn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Post Ad`;}
 });
 
-// ── Render trades ──
-function renderTrades(){
+// ── Load trades ──
+let tradeSearchTimer;
+document.getElementById("trade-search").addEventListener("input",e=>{
+  clearTimeout(tradeSearchTimer);
+  tradeSearchTimer=setTimeout(()=>loadTrades(e.target.value.trim()),300);
+});
+
+async function loadTrades(q=""){
   const list=document.getElementById("trade-list");
-  if(!tradeAds.length){
-    list.innerHTML=`<div class="empty"><div class="empty-icon">⇄</div><h3>No trade ads yet</h3><p>Post the first one above!</p></div>`;
-    return;
+  list.innerHTML=`<div class="spinner"></div>`;
+  try{
+    const r=await fetch(API+"/trades?q="+encodeURIComponent(q),{credentials:"include"});
+    const trades=await r.json();
+    if(!trades.length){
+      list.innerHTML=`<div class="empty"><div class="empty-ico">⇄</div><h3>No trade ads${q?" matching":"" } yet</h3><p>${q?"Try a different search":"Post one above!"}</p></div>`;
+      return;
+    }
+    // count mine
+    const mine=discordUser?trades.filter(t=>t.discordId===discordUser.id):[];
+    document.getElementById("trade-limit-info").textContent=discordUser?`${mine.length}/5 active ads`:"";
+    list.innerHTML=trades.map(ad=>renderTradeCard(ad)).join("");
+  }catch(e){
+    list.innerHTML=`<div class="empty"><div class="empty-ico">⚠</div><h3>Failed to load</h3><p>${esc(e.message)}</p></div>`;
   }
-  list.innerHTML=tradeAds.map((ad,i)=>{
-    const oRap=ad.offer.reduce((s,it)=>s+(it.rap||0),0);
-    const wRap=ad.want.reduce((s,it)=>s+(it.rap||0),0);
-    const diff=wRap>0?Math.round((oRap-wRap)/wRap*100):null;
-    const barW=diff!==null?Math.min(100,Math.abs(diff)):0;
-    return `<div class="trade-card">
-      <div class="trade-top">
-        <div class="trade-user-row">
-          <div class="trade-avatar">${esc((ad.username||"?")[0].toUpperCase())}</div>
-          <div>
-            <div class="trade-username">${esc(ad.username)}</div>
-            <div class="trade-time">${timeAgo(ad.time)}</div>
-          </div>
-        </div>
-        <button class="trade-remove" onclick="removeTrade(${i})">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Remove
-        </button>
-      </div>
-      <div class="trade-body">
-        <div>
-          <div class="trade-side-lbl">Offering</div>
-          <div class="trade-items-wrap">${ad.offer.map(it=>tradeItem(it)).join("")}</div>
-        </div>
-        <div class="trade-arrow-col">
-          <div class="trade-divider-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-          </div>
-        </div>
-        <div>
-          <div class="trade-side-lbl">Wants</div>
-          <div class="trade-items-wrap">${ad.want.map(it=>tradeItem(it)).join("")}</div>
-        </div>
-      </div>
-      <div class="trade-foot">
-        <div class="trade-rap-compare">
-          <div class="rap-bar-wrap"><div class="rap-bar" style="width:${barW}%;background:${diff>=0?"var(--green)":"var(--red)"}"></div></div>
-          <span class="trade-rap-txt" style="color:${diff>=0?"var(--green)":"var(--red)"}">
-            ${diff!==null?(diff>=0?"▲ +":"▼ ")+diff+"%":""}
-          </span>
-        </div>
-        <div style="display:flex;gap:16px">
-          <div class="trade-rap-txt">Offer: <span>${num(oRap)}</span></div>
-          <div class="trade-rap-txt">Ask: <span>${num(wRap)}</span></div>
-        </div>
-      </div>
-    </div>`;
-  }).join("");
 }
 
-function tradeItem(it){
-  const cc=getCardCls(it.tags||[],allTags);
-  return `<div class="titem ${cc}" onclick="openModal(${it.id})">
-    <img class="titem-thumb" src="${esc(it.thumbnailUrl||"")}" onerror="this.style.opacity=.15">
-    <div class="titem-name" title="${esc(it.name)}">${esc(it.name)}</div>
-    ${it.rap!=null?`<div class="titem-rap">${num(it.rap)}</div>`:""}
+function renderTradeCard(ad){
+  const oRap=ad.offer.reduce((s,i)=>s+(i.rap||0),0);
+  const wRap=ad.want.reduce((s,i)=>s+(i.rap||0),0);
+  const diff=wRap>0?Math.round((oRap-wRap)/wRap*100):null;
+  const isMine=discordUser&&discordUser.id===ad.discordId;
+  const expires=Math.max(0,Math.round((ad.time*1000+86400000-Date.now())/3600000));
+
+  return `<div class="tcard" id="tc-${ad.id}">
+    <div class="tc-head">
+      <div class="tc-user">
+        <div class="tc-av">
+          ${ad.avatar?`<img src="https://cdn.discordapp.com/avatars/${ad.discordId}/${ad.avatar}.png?size=32" onerror="this.remove()">`:""}
+          ${esc((ad.username||"?")[0].toUpperCase())}
+        </div>
+        <div>
+          <div class="tc-uname">${esc(ad.username)}</div>
+          <div class="tc-meta">Discord · expires in ${expires}h</div>
+        </div>
+      </div>
+      <div class="tc-actions">
+        <span class="tc-time">${timeAgo(ad.time)}</span>
+        ${isMine?`<button class="tc-del" onclick="deleteTrade('${ad.id}')">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Remove
+        </button>`:""}
+      </div>
+    </div>
+    <div class="tc-body">
+      <div>
+        <div class="tc-lbl">Offering</div>
+        <div class="tc-items">${ad.offer.map(it=>renderTci(it)).join("")}</div>
+      </div>
+      <div class="tc-arrow">
+        <div style="width:26px;height:26px;background:var(--bg4);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--txt3)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+        </div>
+      </div>
+      <div>
+        <div class="tc-lbl">Wants</div>
+        <div class="tc-items">${ad.want.map(it=>renderTci(it)).join("")}</div>
+      </div>
+    </div>
+    <div class="tc-foot">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="rap-bar-wrap"><div class="rap-bar" style="width:${diff!==null?Math.min(100,Math.abs(diff)):0}%;background:${(diff||0)>=0?"var(--green)":"var(--red)"}"></div></div>
+        ${diff!==null?`<span style="font-size:10px;font-weight:700;color:${diff>=0?"var(--green)":"var(--red)"}">${diff>=0?"▲ +":"▼ "}${diff}%</span>`:""}
+      </div>
+      <div class="tc-raps">
+        <div class="tc-rap-txt">Offer: <span>${num(oRap)}</span></div>
+        <div class="tc-rap-txt">Ask: <span>${num(wRap)}</span></div>
+      </div>
+    </div>
   </div>`;
 }
 
-window.removeTrade=function(i){tradeAds.splice(i,1);try{localStorage.setItem("pv3_trades",JSON.stringify(tradeAds));}catch(e){}renderTrades();};
+function renderTci(it){
+  const cc=cardClass(it.tags||[],allTags);
+  return `<div class="tci ${cc}" onclick="openModal(${it.id})">
+    <img class="tci-img" src="${esc(it.thumbnailUrl||"")}" onerror="this.style.opacity=.15">
+    <span class="tci-name" title="${esc(it.name)}">${esc(it.name)}</span>
+    ${it.rap!=null?`<span class="tci-rap">${num(it.rap)}</span>`:""}
+  </div>`;
+}
 
-// ── Player lookup ──
+window.deleteTrade=async function(id){
+  try{
+    const r=await fetch(API+"/trades/"+id,{method:"DELETE",credentials:"include"});
+    const d=await r.json();
+    if(!r.ok){alert(d.error);return;}
+    document.getElementById("tc-"+id)?.remove();
+    loadTrades();
+  }catch(e){alert(e.message);}
+};
+
+// ── Player lookup + limited scanner ──
 document.getElementById("player-btn").addEventListener("click",()=>{const v=document.getElementById("player-input").value.trim();if(v)lookupPlayer(v);});
 document.getElementById("player-input").addEventListener("keydown",e=>{if(e.key==="Enter"){const v=e.target.value.trim();if(v)lookupPlayer(v);}});
 
-async function lookupPlayer(q){
-  const r=document.getElementById("player-result");
-  r.innerHTML='<div class="spinner"></div>';
+window.lookupPlayer=async function(q){
+  const res=document.getElementById("player-result");
+  // switch to player tab
+  document.querySelectorAll(".ntab").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelector('[data-page="players"]').classList.add("active");
+  document.getElementById("page-players").classList.add("active");
+  document.getElementById("player-input").value=q;
+  res.innerHTML=`<div class="spinner"></div>`;
   try{
     let uid=q;
     if(!/^\d+$/.test(q)){
@@ -928,28 +1164,136 @@ async function lookupPlayer(q){
     }
     const u=await fetch(POLY+"/users/"+uid).then(r=>r.json());
     if(u.message) throw new Error(u.message);
-    r.innerHTML=`<div class="card">
+
+    res.innerHTML=`<div class="card">
       <div class="profile-hdr">
-        <img class="profile-avatar" src="${esc(u.thumbnail||"")}" onerror="this.style.display='none'">
+        <img class="pav" src="${esc(u.thumbnail||"")}" onerror="this.style.display='none'">
         <div>
-          <div class="profile-name">${esc(u.username)}</div>
-          <div class="profile-sub">ID: ${u.id}${u.registeredAt?" · Joined "+new Date(u.registeredAt).toLocaleDateString("en-US",{year:"numeric",month:"long"}):""}</div>
-          ${u.description?`<p class="profile-bio">${esc(u.description)}</p>`:""}
+          <div class="pname">${esc(u.username)}</div>
+          <div class="psub">ID: ${u.id}${u.registeredAt?" · Joined "+new Date(u.registeredAt).toLocaleDateString("en-US",{year:"numeric",month:"long"}):""}</div>
+          ${u.description?`<p class="pbio">${esc(u.description)}</p>`:""}
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px">
-        ${u.level!=null?`<div class="stat-box"><div class="stat-val" style="color:var(--accent2)">${u.level}</div><div class="stat-lbl">Level</div></div>`:""}
-        ${u.registeredAt?`<div class="stat-box"><div class="stat-val" style="font-size:12px">${new Date(u.registeredAt).toLocaleDateString("en-US",{month:"short",year:"numeric"})}</div><div class="stat-lbl">Joined</div></div>`:""}
-        ${u.lastSeenAt?`<div class="stat-box"><div class="stat-val" style="font-size:12px">${new Date(u.lastSeenAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div><div class="stat-lbl">Last Seen</div></div>`:""}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:9px;margin-bottom:16px">
+        ${u.level!=null?`<div class="sbox"><div class="sval" style="color:var(--accent2)">${u.level}</div><div class="slbl">Level</div></div>`:""}
+        ${u.registeredAt?`<div class="sbox"><div class="sval" style="font-size:12px">${new Date(u.registeredAt).toLocaleDateString("en-US",{month:"short",year:"numeric"})}</div><div class="slbl">Joined</div></div>`:""}
+        ${u.lastSeenAt?`<div class="sbox"><div class="sval" style="font-size:12px">${new Date(u.lastSeenAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div><div class="slbl">Last Seen</div></div>`:""}
       </div>
-      <a href="https://polytoria.com/users/${u.id}" target="_blank" class="btn btn-primary" style="text-decoration:none;width:100%;justify-content:center">View on Polytoria</a>
+      <a href="https://polytoria.com/users/${u.id}" target="_blank" class="btn btn-p" style="text-decoration:none;width:100%;justify-content:center;margin-bottom:16px">View on Polytoria</a>
+
+      <div id="inv-wrap">
+        <div style="font-size:12px;color:var(--txt3);display:flex;align-items:center;gap:8px">
+          <div class="spinner" style="margin:0;width:14px;height:14px;border-width:2px"></div>
+          Scanning limiteds…
+        </div>
+      </div>
+
+      <div id="rap-history-wrap" style="margin-top:18px"></div>
     </div>`;
-  }catch(e){r.innerHTML=`<div class="card"><div class="empty"><div class="empty-icon">◈</div><h3>User not found</h3><p>${esc(e.message)}</p></div></div>`;}
+
+    // Scan limiteds (cross-ref with all known items)
+    scanPlayerInventory(uid, u.username);
+    loadRapHistory(uid);
+
+  }catch(e){res.innerHTML=`<div class="card"><div class="empty"><div class="empty-ico">◈</div><h3>User not found</h3><p>${esc(e.message)}</p></div></div>`;}
+};
+
+async function scanPlayerInventory(uid, username){
+  const wrap=document.getElementById("inv-wrap");
+  if(!wrap) return;
+  try{
+    // Get user's inventory from Polytoria API
+    const inv=await fetch(POLY+"/store/user/"+uid).then(r=>r.json());
+    const ownedIds=new Set((inv.data||inv||[]).map(i=>String(i.assetId||i.id)));
+    if(!ownedIds.size){wrap.innerHTML=`<div style="font-size:12px;color:var(--txt3)">No limiteds found in public inventory.</div>`;return;}
+
+    // Preload all items if not done
+    if(!allItemsFlat.length) await preloadItems();
+
+    const owned=allItemsFlat.filter(i=>ownedIds.has(String(i.id)));
+    const totalRap=owned.reduce((s,i)=>s+(i.recentAverage||0),0);
+    const totalVal=owned.reduce((s,i)=>s+(i.stats?.value||0),0);
+    const serials=owned.filter(i=>i.serialNumbers?.length||i.lowestSerial!=null);
+
+    // Save RAP snapshot
+    if(totalRap>0){
+      fetch(API+"/player-history/"+uid,{
+        method:"POST",credentials:"include",
+        headers:{"content-type":"application/json"},
+        body:JSON.stringify({rap:totalRap})
+      });
+    }
+
+    wrap.innerHTML=`
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px">
+        <div class="sbox"><div class="sval" style="color:var(--green)">${num(totalRap)}</div><div class="slbl">Total RAP</div></div>
+        <div class="sbox"><div class="sval" style="color:var(--accent2)">${num(totalVal||null)}</div><div class="slbl">Est. Value</div></div>
+        <div class="sbox"><div class="sval">${owned.length}</div><div class="slbl">Limiteds</div></div>
+      </div>
+      ${serials.length?`
+      <div class="inv-section">
+        <div class="inv-title">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Serials
+        </div>
+        <div>${serials.map(i=>`
+          <span class="serial-chip" onclick="openModal(${i.id})">
+            ${esc(i.name)}
+            ${i.lowestSerial!=null?`<span class="sn">#${i.lowestSerial}</span>`:""}
+          </span>`).join("")}
+        </div>
+      </div>`:""}
+      ${owned.length?`
+      <div class="inv-section">
+        <div class="inv-title">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          All Limiteds (${owned.length})
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          ${owned.slice(0,24).map(i=>`
+            <div onclick="openModal(${i.id})" title="${esc(i.name)}" style="width:44px;height:44px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);overflow:hidden;transition:.12s" onmouseover="this.style.borderColor='rgba(124,109,240,.4)'" onmouseout="this.style.borderColor='var(--border)'">
+              <img src="${esc(i.thumbnailUrl||"")}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.opacity=.15">
+            </div>`).join("")}
+          ${owned.length>24?`<div style="display:flex;align-items:center;font-size:11px;color:var(--txt3)">+${owned.length-24} more</div>`:""}
+        </div>
+      </div>`:""}`;
+  }catch(e){
+    if(wrap) wrap.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Could not load inventory (may be private).</div>`;
+  }
+}
+
+async function loadRapHistory(uid){
+  const wrap=document.getElementById("rap-history-wrap");
+  if(!wrap) return;
+  try{
+    const hist=await fetch(API+"/player-history/"+uid,{credentials:"include"}).then(r=>r.json());
+    if(!hist.length){wrap.innerHTML="";return;}
+    wrap.innerHTML=`
+      <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:5px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        RAP History
+        <span class="gpill">${hist.length} days</span>
+      </div>
+      <div class="gwrap" id="player-rap-graph"></div>`;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const el=document.getElementById("player-rap-graph");
+      if(el&&hist.length>=2) drawGraph(el,hist.map(h=>({date:h.date,rap:h.rap})),"");
+      else if(el) el.innerHTML=`<div class="empty" style="padding:22px"><p style="font-size:11px;color:var(--txt3)">Check back tomorrow for graph data</p></div>`;
+    }));
+  }catch(e){}
 }
 
 // ── Init ──
+checkAuth();
 loadItems();
-renderTrades();
+preloadItems();
+setupPicker("offer");
+setupPicker("want");
+
+// If landed on trades tab (e.g. via nav link)
+window.addEventListener("load",()=>{
+  if(document.getElementById("page-trades").classList.contains("active")) loadTrades();
+});
 </script>
 </body>
 </html>
