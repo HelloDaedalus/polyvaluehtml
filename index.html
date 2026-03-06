@@ -581,14 +581,13 @@ async function fetchPage(page,search){
 async function preloadItems(){
   if(allItemsFlat.length>0) return;
   try{
-    // First fetch page 1 to get total page count
     const first=await fetchPage(1,"");
     if(allTags.length===0) allTags=first.allTags||[];
     (first.items||[]).forEach(i=>itemCache[i.id]=i);
     allItemsFlat=[...first.items||[]];
-    const total=Math.min(first.totalPages||1, 8); // cap at 8 pages
+    const total=first.totalPages||1;
     if(total>1){
-      // Fetch remaining pages in parallel
+      // Fetch all remaining pages in parallel
       const rest=await Promise.all(
         Array.from({length:total-1},(_,i)=>fetchPage(i+2,"").catch(()=>({items:[],allTags:[]})))
       );
@@ -1249,7 +1248,7 @@ async function scanPlayerInventory(uid, username){
   const lowerName=username.toLowerCase();
   if(!allItemsFlat.length) await preloadItems();
   const items=[...allItemsFlat];
-  const owned=[], serials=[];
+  const ownedMap=new Map(); // itemId -> {item, serials[]}
   let scanned=0;
 
   function updateProgress(){
@@ -1257,60 +1256,74 @@ async function scanPlayerInventory(uid, username){
     if(!w) return;
     w.innerHTML=`<div style="font-size:12px;color:var(--txt3);display:flex;align-items:center;gap:10px">
       <div class="spinner" style="margin:0;width:14px;height:14px;border-width:2px"></div>
-      Scanning limiteds… ${scanned}/${items.length}
-      ${owned.length?`<span style="color:var(--green)">Found ${owned.length}</span>`:""}
+      Scanning ${scanned}/${items.length}
+      ${ownedMap.size?`<span style="color:var(--green);font-weight:600">&#10003; ${ownedMap.size} found</span>`:""}
     </div>`;
   }
 
-  const BATCH=8;
+  // Fetch owners for one item - returns [{username, id, serials:[]}]
+  async function fetchOwnersFast(item){
+    // Use cache if available
+    if(item._ownersFetched) return item._ownersList||[];
+    try{
+      const input=encodeURIComponent(JSON.stringify({"0":Number(item.id),"1":Number(item.id)}));
+      const r=await fetch(T+"getAllItemOwners,getRecentItemHistory?batch=1&input="+input+"&itemid="+item.id,
+        {headers:{"content-type":"application/json"}});
+      if(!r.ok) return [];
+      const j=await r.json();
+      const owners=j[0]?.result?.data||[];
+      // Cache on item
+      item._ownersFetched=true;
+      item._ownersList=owners;
+      item._ownerNames=owners.map(o=>(o.username||"").toLowerCase());
+      item._ownerSerials={};
+      owners.forEach(o=>{if(o.username) item._ownerSerials[o.username.toLowerCase()]=o.serials||[];});
+      itemCache[item.id]=item;
+      const idx=allItemsFlat.findIndex(x=>x.id===item.id);
+      if(idx>=0) allItemsFlat[idx]=item;
+      return owners;
+    }catch(e){ return []; }
+  }
+
+  // Process in batches of 6 parallel
+  const BATCH=6;
   for(let i=0;i<items.length;i+=BATCH){
     if(!document.getElementById("inv-wrap")) return;
     const batch=items.slice(i,i+BATCH);
     await Promise.all(batch.map(async item=>{
-      if(item._ownerNames){
-        if(item._ownerNames.includes(lowerName)){
-          owned.push({item,userSerials:item._ownerSerials?.[lowerName]||[]});
-          if(item._ownerSerials?.[lowerName]?.length) serials.push({item,nums:item._ownerSerials[lowerName]});
-        }
-        scanned++; return;
+      const owners=await fetchOwnersFast(item);
+      // Find this user — case insensitive match on username OR id match
+      const match=owners.find(o=>
+        (o.username||"").toLowerCase()===lowerName ||
+        (uid && String(o.id)===String(uid))
+      );
+      if(match){
+        ownedMap.set(item.id,{item, serials: match.serials||[]});
       }
-      try{
-        const input=encodeURIComponent(JSON.stringify({"0":Number(item.id),"1":Number(item.id)}));
-        const r=await fetch(T+`getAllItemOwners,getRecentItemHistory?batch=1&input=${input}&itemid=${item.id}`,{headers:{"content-type":"application/json"}});
-        const j=await r.json();
-        const owners=j[0]?.result?.data||[];
-        item._ownerNames=owners.map(o=>o.username?.toLowerCase()).filter(Boolean);
-        item._ownerSerials={};
-        owners.forEach(o=>{if(o.username) item._ownerSerials[o.username.toLowerCase()]=o.serials||[];});
-        itemCache[item.id]=item;
-        const idx=allItemsFlat.findIndex(x=>x.id===item.id);
-        if(idx>=0) allItemsFlat[idx]=item;
-        if(item._ownerNames.includes(lowerName)){
-          owned.push({item,userSerials:item._ownerSerials[lowerName]||[]});
-          if(item._ownerSerials[lowerName]?.length) serials.push({item,nums:item._ownerSerials[lowerName]});
-        }
-      }catch(e){}
       scanned++;
     }));
     updateProgress();
   }
 
-  // Supplement with Polytoria inventory API
+  // Also try Polytoria inventory API
   try{
     const inv=await fetch(POLY+"/store/user/"+uid+"?limit=100").then(r=>r.json());
     const ownedIds=new Set((inv.data||inv||[]).map(i=>String(i.assetId||i.itemId||i.id)));
     for(const item of allItemsFlat){
-      if(ownedIds.has(String(item.id))&&!owned.find(o=>o.item.id===item.id)){
-        owned.push({item,userSerials:[]});
+      if(ownedIds.has(String(item.id))&&!ownedMap.has(item.id)){
+        ownedMap.set(item.id,{item,serials:[]});
       }
     }
   }catch(e){}
 
+  const owned=[...ownedMap.values()];
+  const withSerials=owned.filter(o=>o.serials.length>0);
   const totalRap=owned.reduce((s,o)=>s+(o.item.recentAverage||0),0);
   const totalVal=owned.reduce((s,o)=>s+(o.item.stats?.value||0),0);
 
   if(totalRap>0&&uid){
-    fetch(API+"/player-history/"+uid,{method:"POST",credentials:"include",headers:{"content-type":"application/json"},body:JSON.stringify({rap:totalRap})}).catch(()=>{});
+    fetch(API+"/player-history/"+uid,{method:"POST",credentials:"include",
+      headers:{"content-type":"application/json"},body:JSON.stringify({rap:totalRap})}).catch(()=>{});
   }
 
   const w=document.getElementById("inv-wrap");
@@ -1327,16 +1340,15 @@ async function scanPlayerInventory(uid, username){
       <div class="sbox"><div class="sval" style="color:var(--accent2)">${num(totalVal||null)}</div><div class="slbl">Est. Value</div></div>
       <div class="sbox"><div class="sval">${owned.length}</div><div class="slbl">Limiteds</div></div>
     </div>
-    ${serials.length?`
+    ${withSerials.length?`
     <div class="inv-section">
       <div class="inv-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Serials</div>
-      <div>${serials.map(s=>`<span class="serial-chip" onclick="openModal(${s.item.id})">${esc(s.item.name)}<span class="sn">${s.nums.map(n=>"#"+n).join(" ")}</span></span>`).join("")}</div>
+      <div>${withSerials.map(o=>`<span class="serial-chip" onclick="openModal(${o.item.id})">${esc(o.item.name)} <span class="sn">${o.serials.map(n=>"#"+n).join(" ")}</span></span>`).join("")}</div>
     </div>`:""}
     <div class="inv-section">
       <div class="inv-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> Limiteds (${owned.length})</div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
-        ${owned.slice(0,48).map(o=>`<div onclick="openModal(${o.item.id})" title="${esc(o.item.name)}" style="width:44px;height:44px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);overflow:hidden;transition:.12s" onmouseover="this.style.borderColor='rgba(124,109,240,.4)'" onmouseout="this.style.borderColor='var(--border)'"><img src="${esc(o.item.thumbnailUrl||"")}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.opacity=.15"></div>`).join("")}
-        ${owned.length>48?`<div style="display:flex;align-items:center;font-size:11px;color:var(--txt3)">+${owned.length-48} more</div>`:""}
+        ${owned.map(o=>`<div onclick="openModal(${o.item.id})" title="${esc(o.item.name)}" style="width:44px;height:44px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);overflow:hidden;transition:.12s" onmouseover="this.style.borderColor='rgba(124,109,240,.4)'" onmouseout="this.style.borderColor='var(--border)'"><img src="${esc(o.item.thumbnailUrl||"")}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.opacity=.15"></div>`).join("")}
       </div>
     </div>`;
 }
