@@ -745,6 +745,9 @@ window.searchAll=function(q){
 document.addEventListener("click",e=>{if(!e.target.closest(".gsearch-wrap"))gPreview.classList.remove("show");});
 
 // ── Modal ──
+const graphCache={}; // id -> {pts, ts}
+const GRAPH_TTL=30*60*1000; // 30 minutes
+
 window.openModal=async function(id){
   const ov=document.getElementById("modal-ov");
   const box=document.getElementById("modal-box");
@@ -756,22 +759,35 @@ window.openModal=async function(id){
   const cached=itemCache[id];
   if(cached){const cc=cardClass(cached.tags||[],allTags);box.className="modal"+(cc?" "+cc:"");}
 
+  // Use cached graph if fresh
+  const cachedGraph=graphCache[id];
+  const graphFresh=cachedGraph&&(Date.now()-cachedGraph.ts<GRAPH_TTL);
+
   try{
     const input=encodeURIComponent(JSON.stringify({"0":Number(id),"1":Number(id)}));
-    const [graphR,ownerR]=await Promise.all([
-      fetch(T+`getItemWithTags,getItemGraph?batch=1&input=${input}&itemid=${id}`,{headers:{"content-type":"application/json"}}),
+    const fetches=[
+      graphFresh?Promise.resolve(null):fetch(T+`getItemWithTags,getItemGraph?batch=1&input=${input}&itemid=${id}`,{headers:{"content-type":"application/json"}}),
       fetch(T+`getAllItemOwners,getRecentItemHistory?batch=1&input=${input}&itemid=${id}`,{headers:{"content-type":"application/json"}})
-    ]);
-    const gj=await graphR.json();
+    ];
+    const [graphR,ownerR]=await Promise.all(fetches);
     const oj=await ownerR.json();
 
-    // [0] = getItemWithTags => {item:{...}, allTags:[...], latestListing:{bestPrice,sellers}}
-    const richItem=gj[0]?.result?.data?.item||cached;
-    const listing=gj[0]?.result?.data?.latestListing||null;
-    if(richItem) itemCache[richItem.id]=richItem;
-
-    // [1] = getItemGraph => {res:{data:{price:[{x:"2025-12-13",y:"483"},...], volume:[...]}}}
-    const graphPts=gj[1]?.result?.data?.res?.data?.price||[];
+    let richItem=cached, listing=null, graphPts=cachedGraph?.pts||[];
+    if(graphR){
+      const gj=await graphR.json();
+      richItem=gj[0]?.result?.data?.item||cached;
+      listing=gj[0]?.result?.data?.latestListing||null;
+      graphPts=gj[1]?.result?.data?.res?.data?.price||[];
+      graphCache[id]={pts:graphPts,ts:Date.now()};
+    } else {
+      // Graph cached — fetch item data without graph to keep info fresh
+      try{
+        const r2=await fetch(T+`getItemWithTags,getItemGraph?batch=1&input=${input}&itemid=${id}`,{headers:{"content-type":"application/json"}});
+        const gj2=await r2.json();
+        richItem=gj2[0]?.result?.data?.item||cached;
+        listing=gj2[0]?.result?.data?.latestListing||null;
+      }catch(e){ richItem=cached; }
+    }
 
     // owners [0] => [{username, id, serials:[4,8,9]}]
     const owners=oj[0]?.result?.data||[];
@@ -1379,21 +1395,17 @@ async function scanPlayerInventory(uid, username){
       <div class="sbox"><div class="sval" style="color:var(--accent2)">${num(totalVal||null)}</div><div class="slbl">Est. Value</div></div>
       <div class="sbox"><div class="sval">${owned.length}</div><div class="slbl">Limiteds</div></div>
     </div>
-    ${withSerials.length?`
-    <div class="inv-section">
-      <div class="inv-title">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Serials
-      </div>
-      <div>${withSerials.map(o=>`<span class="serial-chip" onclick="openModal(${o.item.id})">${esc(o.item.name)} <span class="sn">${o.serials.map(n=>"#"+n).join(" ")}</span></span>`).join("")}</div>
-    </div>`:""}
     <div class="inv-section">
       <div class="inv-title">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
         Limiteds (${owned.length})
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
-        ${owned.map(o=>`<div onclick="openModal(${o.item.id})" title="${esc(o.item.name)}" style="width:44px;height:44px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);overflow:hidden;transition:.12s" onmouseover="this.style.borderColor='rgba(124,109,240,.4)'" onmouseout="this.style.borderColor='var(--border)'"><img src="${esc(o.item.thumbnailUrl||"")}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.opacity=.15"></div>`).join("")}
+        ${owned.map(o=>{
+          const serials=o.serials||[];
+          const serialTag=serials.length?`<div style="position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;color:var(--gold);line-height:1.3;pointer-events:none;padding:0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${serials.map(n=>"#"+n).join(" ")}</div>`:"";
+          return `<div onclick="openModal(${o.item.id})" title="${esc(o.item.name)}\n${serials.length?"Serials: "+serials.map(n=>"#"+n).join(", "):""}" style="position:relative;width:54px;height:54px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid ${serials.length?"rgba(255,204,85,.35)":"var(--border)"};overflow:hidden;transition:.12s" onmouseover="this.style.borderColor='rgba(124,109,240,.5)'" onmouseout="this.style.borderColor='${serials.length?"rgba(255,204,85,.35)":"var(--border)"}'"><img src="${esc(o.item.thumbnailUrl||"")}" style="width:100%;height:${serials.length?"72":"100"}%;object-fit:contain;padding:3px" onerror="this.style.opacity=.15">${serialTag}</div>`;
+        }).join("")}
       </div>
     </div>`;
 }
