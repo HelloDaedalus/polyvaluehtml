@@ -577,17 +577,25 @@ async function fetchPage(page,search){
   return (await r.json())[0].result.data;
 }
 
-// Pre-load items for picker search (loads first 6 pages in background)
+// Pre-load items for picker search - parallel page fetches
 async function preloadItems(){
   if(allItemsFlat.length>0) return;
   try{
-    // fetch pages 1-6 silently
-    for(let p=1;p<=6;p++){
-      const d=await fetchPage(p,"");
-      if(allTags.length===0) allTags=d.allTags||[];
-      (d.items||[]).forEach(i=>{itemCache[i.id]=i;});
-      allItemsFlat=[...new Map([...allItemsFlat,...(d.items||[])].map(i=>[i.id,i])).values()];
-      if(p>=d.totalPages) break;
+    // First fetch page 1 to get total page count
+    const first=await fetchPage(1,"");
+    if(allTags.length===0) allTags=first.allTags||[];
+    (first.items||[]).forEach(i=>itemCache[i.id]=i);
+    allItemsFlat=[...first.items||[]];
+    const total=Math.min(first.totalPages||1, 8); // cap at 8 pages
+    if(total>1){
+      // Fetch remaining pages in parallel
+      const rest=await Promise.all(
+        Array.from({length:total-1},(_,i)=>fetchPage(i+2,"").catch(()=>({items:[],allTags:[]})))
+      );
+      rest.forEach(d=>{
+        (d.items||[]).forEach(i=>itemCache[i.id]=i);
+        allItemsFlat=[...new Map([...allItemsFlat,...(d.items||[])].map(i=>[i.id,i])).values()];
+      });
     }
   }catch(e){}
 }
@@ -1237,103 +1245,100 @@ window.lookupPlayer=async function(q){
 async function scanPlayerInventory(uid, username){
   const wrap=document.getElementById("inv-wrap");
   if(!wrap) return;
-  try{
-    // Preload items if needed
-    if(!allItemsFlat.length) await preloadItems();
 
-    // Find which items this user owns by scanning allItemsFlat owners
-    // We do this by checking each item's owners endpoint — but that's too many calls.
-    // Instead, cross-ref: for each item we already know about, check if this user
-    // appears in the owners we've loaded. We also do a targeted search.
-    // Best approach: fetch all items pages and check recentHistory for this user.
+  const lowerName=username.toLowerCase();
+  if(!allItemsFlat.length) await preloadItems();
+  const items=[...allItemsFlat];
+  const owned=[], serials=[];
+  let scanned=0;
 
-    // Search by username across all items we have in cache
-    const owned=[];
-    const lowerName=username.toLowerCase();
-
-    // Check if any cached items have this user in their known owners
-    // (populated when modals were opened). Also scan by fetching pages.
-    // Primary method: use polytoria.trade's search — items where this user owns them
-    // We fetch several pages and check recentItemHistory cross-ref
-    let totalRap=0;
-    const serials=[];
-
-    // Scan all items in our flat cache
-    for(const item of allItemsFlat){
-      // We'll mark items as owned if we find them via the owners endpoint
-      // For now mark any item that has a username match in cached owner data
-      if(item._ownerNames?.includes(lowerName)){
-        owned.push({item, userSerials: item._ownerSerials?.[lowerName]||[]});
-        totalRap+=item.recentAverage||0;
-        if(item._ownerSerials?.[lowerName]?.length){
-          serials.push({item, nums: item._ownerSerials[lowerName]});
-        }
-      }
-    }
-
-    // Also try Polytoria API for inventory as backup
-    try{
-      const inv=await fetch(POLY+"/store/user/"+uid+"?limit=100").then(r=>r.json());
-      const ownedIds=new Set((inv.data||inv||[]).map(i=>String(i.assetId||i.itemId||i.id)));
-      if(ownedIds.size){
-        for(const item of allItemsFlat){
-          if(ownedIds.has(String(item.id))&&!owned.find(o=>o.item.id===item.id)){
-            owned.push({item, userSerials:[]});
-            totalRap+=item.recentAverage||0;
-          }
-        }
-      }
-    }catch(e){ /* Polytoria API down, skip */ }
-
-    // Save RAP snapshot to our backend
-    if(totalRap>0&&uid){
-      fetch(API+"/player-history/"+uid,{
-        method:"POST",credentials:"include",
-        headers:{"content-type":"application/json"},
-        body:JSON.stringify({rap:totalRap})
-      }).catch(()=>{});
-    }
-
-    if(!owned.length){
-      wrap.innerHTML=`<div style="font-size:12px;color:var(--txt3);padding:8px 0">No limiteds found in our data yet. RAP history will appear once items are tracked.</div>`;
-      return;
-    }
-
-    wrap.innerHTML=`
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px">
-        <div class="sbox"><div class="sval" style="color:var(--green)">${num(totalRap)}</div><div class="slbl">Total RAP</div></div>
-        <div class="sbox"><div class="sval" style="color:var(--accent2)">${num(owned.reduce((s,o)=>s+(o.item.stats?.value||0),0)||null)}</div><div class="slbl">Est. Value</div></div>
-        <div class="sbox"><div class="sval">${owned.length}</div><div class="slbl">Limiteds</div></div>
-      </div>
-      ${serials.length?`
-      <div class="inv-section">
-        <div class="inv-title">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Serials
-        </div>
-        <div>${serials.map(s=>`
-          <span class="serial-chip" onclick="openModal(${s.item.id})">
-            ${esc(s.item.name)}
-            <span class="sn">${s.nums.map(n=>"#"+n).join(" ")}</span>
-          </span>`).join("")}
-        </div>
-      </div>`:""}
-      <div class="inv-section">
-        <div class="inv-title">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-          Limiteds (${owned.length})
-        </div>
-        <div style="display:flex;gap:7px;flex-wrap:wrap">
-          ${owned.slice(0,24).map(o=>`
-            <div onclick="openModal(${o.item.id})" title="${esc(o.item.name)}" style="width:44px;height:44px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);overflow:hidden;transition:.12s" onmouseover="this.style.borderColor='rgba(124,109,240,.4)'" onmouseout="this.style.borderColor='var(--border)'">
-              <img src="${esc(o.item.thumbnailUrl||"")}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.opacity=.15">
-            </div>`).join("")}
-          ${owned.length>24?`<div style="display:flex;align-items:center;font-size:11px;color:var(--txt3)">+${owned.length-24} more</div>`:""}
-        </div>
-      </div>`;
-  }catch(e){
-    if(wrap) wrap.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Could not load inventory data.</div>`;
+  function updateProgress(){
+    const w=document.getElementById("inv-wrap");
+    if(!w) return;
+    w.innerHTML=`<div style="font-size:12px;color:var(--txt3);display:flex;align-items:center;gap:10px">
+      <div class="spinner" style="margin:0;width:14px;height:14px;border-width:2px"></div>
+      Scanning limiteds… ${scanned}/${items.length}
+      ${owned.length?`<span style="color:var(--green)">Found ${owned.length}</span>`:""}
+    </div>`;
   }
+
+  const BATCH=8;
+  for(let i=0;i<items.length;i+=BATCH){
+    if(!document.getElementById("inv-wrap")) return;
+    const batch=items.slice(i,i+BATCH);
+    await Promise.all(batch.map(async item=>{
+      if(item._ownerNames){
+        if(item._ownerNames.includes(lowerName)){
+          owned.push({item,userSerials:item._ownerSerials?.[lowerName]||[]});
+          if(item._ownerSerials?.[lowerName]?.length) serials.push({item,nums:item._ownerSerials[lowerName]});
+        }
+        scanned++; return;
+      }
+      try{
+        const input=encodeURIComponent(JSON.stringify({"0":Number(item.id),"1":Number(item.id)}));
+        const r=await fetch(T+`getAllItemOwners,getRecentItemHistory?batch=1&input=${input}&itemid=${item.id}`,{headers:{"content-type":"application/json"}});
+        const j=await r.json();
+        const owners=j[0]?.result?.data||[];
+        item._ownerNames=owners.map(o=>o.username?.toLowerCase()).filter(Boolean);
+        item._ownerSerials={};
+        owners.forEach(o=>{if(o.username) item._ownerSerials[o.username.toLowerCase()]=o.serials||[];});
+        itemCache[item.id]=item;
+        const idx=allItemsFlat.findIndex(x=>x.id===item.id);
+        if(idx>=0) allItemsFlat[idx]=item;
+        if(item._ownerNames.includes(lowerName)){
+          owned.push({item,userSerials:item._ownerSerials[lowerName]||[]});
+          if(item._ownerSerials[lowerName]?.length) serials.push({item,nums:item._ownerSerials[lowerName]});
+        }
+      }catch(e){}
+      scanned++;
+    }));
+    updateProgress();
+  }
+
+  // Supplement with Polytoria inventory API
+  try{
+    const inv=await fetch(POLY+"/store/user/"+uid+"?limit=100").then(r=>r.json());
+    const ownedIds=new Set((inv.data||inv||[]).map(i=>String(i.assetId||i.itemId||i.id)));
+    for(const item of allItemsFlat){
+      if(ownedIds.has(String(item.id))&&!owned.find(o=>o.item.id===item.id)){
+        owned.push({item,userSerials:[]});
+      }
+    }
+  }catch(e){}
+
+  const totalRap=owned.reduce((s,o)=>s+(o.item.recentAverage||0),0);
+  const totalVal=owned.reduce((s,o)=>s+(o.item.stats?.value||0),0);
+
+  if(totalRap>0&&uid){
+    fetch(API+"/player-history/"+uid,{method:"POST",credentials:"include",headers:{"content-type":"application/json"},body:JSON.stringify({rap:totalRap})}).catch(()=>{});
+  }
+
+  const w=document.getElementById("inv-wrap");
+  if(!w) return;
+
+  if(!owned.length){
+    w.innerHTML=`<div style="font-size:12px;color:var(--txt3);padding:8px 0">No limiteds found for this player.</div>`;
+    return;
+  }
+
+  w.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px">
+      <div class="sbox"><div class="sval" style="color:var(--green)">${num(totalRap)}</div><div class="slbl">Total RAP</div></div>
+      <div class="sbox"><div class="sval" style="color:var(--accent2)">${num(totalVal||null)}</div><div class="slbl">Est. Value</div></div>
+      <div class="sbox"><div class="sval">${owned.length}</div><div class="slbl">Limiteds</div></div>
+    </div>
+    ${serials.length?`
+    <div class="inv-section">
+      <div class="inv-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Serials</div>
+      <div>${serials.map(s=>`<span class="serial-chip" onclick="openModal(${s.item.id})">${esc(s.item.name)}<span class="sn">${s.nums.map(n=>"#"+n).join(" ")}</span></span>`).join("")}</div>
+    </div>`:""}
+    <div class="inv-section">
+      <div class="inv-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> Limiteds (${owned.length})</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        ${owned.slice(0,48).map(o=>`<div onclick="openModal(${o.item.id})" title="${esc(o.item.name)}" style="width:44px;height:44px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);overflow:hidden;transition:.12s" onmouseover="this.style.borderColor='rgba(124,109,240,.4)'" onmouseout="this.style.borderColor='var(--border)'"><img src="${esc(o.item.thumbnailUrl||"")}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.opacity=.15"></div>`).join("")}
+        ${owned.length>48?`<div style="display:flex;align-items:center;font-size:11px;color:var(--txt3)">+${owned.length-48} more</div>`:""}
+      </div>
+    </div>`;
 }
 
 async function loadRapHistory(uid){
