@@ -378,7 +378,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
 <div class="main">
 <div class="container">
 
-  <!-- LIMITEDS -->
+  
   <div class="page active" id="page-items">
     <div class="filter-bar">
       <input class="finput" id="item-search" placeholder="Search…" autocomplete="off">
@@ -407,7 +407,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
     </div>
   </div>
 
-  <!-- TRADES -->
+  
   <div class="page" id="page-trades">
     <div class="card" style="margin-bottom:18px" id="post-card">
       <div class="ctitle">Post Trade Ad</div>
@@ -464,7 +464,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
     <div id="trade-list"></div>
   </div>
 
-  <!-- PLAYERS -->
+  
   <div class="page" id="page-players">
     <div class="card" style="margin-bottom:18px">
       <div class="ctitle">Player Lookup</div>
@@ -479,7 +479,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
 </div>
 </div>
 
-<!-- MODAL -->
+
 <div class="modal-ov" id="modal-ov">
   <div class="modal" id="modal-box">
     <button class="modal-x" id="modal-x">
@@ -489,20 +489,20 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
   </div>
 </div>
 
-<!-- Notification toast stack -->
+
 <div id="notif-stack"></div>
 
-<!-- DM modal -->
+
 <div id="dm-modal">
   <div id="dm-box">
     <div class="dm-head">
       <div class="dm-av-wrap" style="position:relative">
-        <img id="dm-peer-av" class="notif-av" src="" onerror="this.style.opacity=.2">
+        <img id="dm-peer-av" class="notif-av" src="" style="display:none" onerror="this.style.display='none'">
       </div>
       <div class="dm-head-title" id="dm-peer-name">Messages</div>
       <button class="dm-close" id="dm-close-btn">✕</button>
     </div>
-    <!-- inbox list or message thread -->
+    
     <div id="dm-view" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
       <div class="dm-inbox" id="dm-inbox"></div>
     </div>
@@ -513,7 +513,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
   </div>
 </div>
 
-<!-- Notification chime -->
+
 <audio id="notif-sound" preload="auto">
   <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFkZSXmZqbmpqZl5SQi4WAfHh0b2tmYl5bWFZVVFRUVVZYW19jZ2xxdnp/g4eKjY+RkpKSkZCOi4iFgX57eHVzcXBwcHFyc3V3eny AgoSGiImKi4uKiomIhoSCgH59e3p5eHh4eXp7fX9/gIGCg4OEhISEg4KBgH9+fXx7e3t7e3t8fX5/gIGCg4SEhYWFhYSEg4KBgH9+fnx8e3t7e3t8fX5/gIGCg4SEhISEg4OCgYB/fn18e3t7e3x8fX5+gIGCg4OEhISEg4KCgYB/fn18e3t6enp7fH1+f4CBgoOEhISFhYWEg4KBgH9+fXx7e3t7fHx9fn+AgYKDhISFhYWEg4OCgYB/fn18e3t7" type="audio/wav">
 </audio>
@@ -528,7 +528,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
         <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>
         <span style="color:var(--accent2)">Poly</span><span style="color:var(--txt)">Value</span>
       </div>
-      <div class="footer-sub">The best way to track Polytoria limited values, demand, and trades. Built by the community.</div>
+      <div class="footer-sub">The best way to track Polytoria limited values, demand, and trades. Built by thoth</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <div class="footer-links">
@@ -555,13 +555,11 @@ const API  = "https://polyvalue.onrender.com";
 const T    = API + "/trade/api/trpc/";
 const POLY = "https://api.polytoria.com/v1";
 
-// ── Utils ──
 const esc=s=>{const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML};
 const num=n=>n==null||n===""?"—":Number(n).toLocaleString();
 const timeAgo=ms=>{const s=Math.floor((Date.now()-ms*1000)/1000);if(s<60)return s+"s ago";if(s<3600)return Math.floor(s/60)+"m ago";if(s<86400)return Math.floor(s/3600)+"h ago";return Math.floor(s/86400)+"d ago"};
 const ico=(p,extra="")=>`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ${extra}>${p}</svg>`;
 
-// ── Tag helpers ──
 const TAG_CLS={Hoarded:"hoarded",Projected:"projected",Rare:"rare",Unsettled:"unsettled"};
 const PILL_CLS={hoarded:"tp-h",projected:"tp-p",rare:"tp-r",unsettled:"tp-u"};
 const PIP_CLS={hoarded:"hoarded",projected:"projected",rare:"rare",unsettled:"unsettled"};
@@ -588,15 +586,12 @@ function pips(tags,at){
   }).join("");
 }
 
-// ── State ──
 let pg=1, allPages=1, allTags=[], itemCache={};
 let fV=false,fH=false,fR=false,fP=false, sortBy="", sq="";
 let offerItems=[], wantItems=[];
 let discordUser=null;
-// Pre-fetched item list for picker search
 let allItemsFlat=[];
 
-// ── Nav ──
 document.querySelectorAll(".ntab").forEach(b=>{
   b.addEventListener("click",()=>{
     document.querySelectorAll(".ntab").forEach(x=>x.classList.remove("active"));
@@ -607,7 +602,6 @@ document.querySelectorAll(".ntab").forEach(b=>{
   });
 });
 
-// check auth on load
 async function checkAuth(){
   try{
     const r=await fetch(API+"/auth/me",{credentials:"include"});
@@ -645,13 +639,11 @@ function renderPostForm(){
   document.getElementById("post-form").style.display=discordUser?"block":"none";
 }
 
-// handle ?auth= param on redirect
 (()=>{
   const p=new URLSearchParams(location.search);
   if(p.has("auth")){history.replaceState({},"",location.pathname);}
 })();
 
-// ── Fetch items ──
 async function fetchPage(page,search){
   const body={"0":{page,total:24,search:search||"",homepage:false}};
   const r=await fetch(T+"getItemsByPage?batch=1",{
@@ -662,7 +654,6 @@ async function fetchPage(page,search){
   return (await r.json())[0].result.data;
 }
 
-// Pre-load items for picker search - parallel page fetches
 async function preloadItems(){
   if(allItemsFlat.length>0) return;
   try{
@@ -672,7 +663,6 @@ async function preloadItems(){
     allItemsFlat=[...first.items||[]];
     const total=first.totalPages||1;
     if(total>1){
-      // Fetch all remaining pages in parallel
       const rest=await Promise.all(
         Array.from({length:total-1},(_,i)=>fetchPage(i+2,"").catch(()=>({items:[],allTags:[]})))
       );
@@ -684,7 +674,6 @@ async function preloadItems(){
   }catch(e){}
 }
 
-// ── Load items tab ──
 async function loadItems(){
   const grid=document.getElementById("items-grid");
   grid.innerHTML=Array(12).fill(0).map(()=>`<div class="icard" style="pointer-events:none">
@@ -698,7 +687,6 @@ async function loadItems(){
     let items=data.items||[];
     let filteredTotal=data.totalPages||1;
 
-    // Client-side filters
     const needsFilter=fV||fH||fR||fP;
     if(needsFilter){
       items=items.filter(i=>{
@@ -711,7 +699,6 @@ async function loadItems(){
       filteredTotal=1;
     }
 
-    // Sort
     if(sortBy==="rap-desc") items.sort((a,b)=>(b.recentAverage||0)-(a.recentAverage||0));
     else if(sortBy==="rap-asc") items.sort((a,b)=>(a.recentAverage||0)-(b.recentAverage||0));
     else if(sortBy==="val-desc") items.sort((a,b)=>(b.stats?.value||0)-(a.stats?.value||0));
@@ -762,7 +749,6 @@ function renderCard(item){
   </div>`;
 }
 
-// Filter chips
 const chips=[["v",()=>fV=!fV],["h",()=>fH=!fH],["r",()=>fR=!fR],["p",()=>fP=!fP]];
 chips.forEach(([k,tog])=>{
   document.getElementById("chip-"+k).addEventListener("click",function(){tog();this.classList.toggle("on",{v:fV,h:fH,r:fR,p:fP}[k]);pg=1;loadItems();});
@@ -771,11 +757,9 @@ document.getElementById("sort-sel").addEventListener("change",function(){sortBy=
 document.getElementById("btn-prev").addEventListener("click",()=>{if(pg>1){pg--;loadItems();}});
 document.getElementById("btn-next").addEventListener("click",()=>{if(pg<allPages){pg++;loadItems();}});
 
-// Item search
 let st;
 document.getElementById("item-search").addEventListener("input",e=>{clearTimeout(st);st=setTimeout(()=>{sq=e.target.value.trim();pg=1;loadItems();},300);});
 
-// ── Global search with preview ──
 let gst, gPreviewItems=[];
 const gInput=document.getElementById("gsearch");
 const gPreview=document.getElementById("search-preview");
@@ -829,7 +813,6 @@ window.searchAll=function(q){
 
 document.addEventListener("click",e=>{if(!e.target.closest(".gsearch-wrap"))gPreview.classList.remove("show");});
 
-// ── Modal ──
 const graphCache={}; // id -> {pts, ts}
 const GRAPH_TTL=30*60*1000; // 30 minutes
 
@@ -844,7 +827,6 @@ window.openModal=async function(id){
   const cached=itemCache[id];
   if(cached){const cc=cardClass(cached.tags||[],allTags);box.className="modal"+(cc?" "+cc:"");}
 
-  // Use cached graph if fresh
   const cachedGraph=graphCache[id];
   const graphFresh=cachedGraph&&(Date.now()-cachedGraph.ts<GRAPH_TTL);
 
@@ -865,7 +847,6 @@ window.openModal=async function(id){
       graphPts=gj[1]?.result?.data?.res?.data?.price||[];
       graphCache[id]={pts:graphPts,ts:Date.now()};
     } else {
-      // Graph cached — fetch item data without graph to keep info fresh
       try{
         const r2=await fetch(T+`getItemWithTags,getItemGraph?batch=1&input=${input}&itemid=${id}`,{headers:{"content-type":"application/json"}});
         const gj2=await r2.json();
@@ -874,12 +855,9 @@ window.openModal=async function(id){
       }catch(e){ richItem=cached; }
     }
 
-    // owners [0] => [{username, id, serials:[4,8,9]}]
     const owners=oj[0]?.result?.data||[];
-    // recent history [1] => [{serial, username, userId, created_at}]
     const recent=oj[1]?.result?.data||[];
 
-    // Cache owner->serials on the item so player scanner can find it
     const itemRef=richItem||cached;
     if(itemRef&&owners.length){
       itemRef._ownerNames=owners.map(o=>o.username?.toLowerCase()).filter(Boolean);
@@ -992,7 +970,6 @@ function renderModal(item,content,cc,graphPts,owners,recent,listing){
   }
 }
 
-// ── Graph ──
 function drawGraph(el,raw,cc){
   if(!el) return;
   const W=el.clientWidth||640, H=el.clientHeight||155;
@@ -1012,7 +989,6 @@ function drawGraph(el,raw,cc){
   const yS=v=>PAD.t+(1-(v-minV)/Math.max(maxV-minV,1))*(H-PAD.t-PAD.b);
   const clr=cc==="is-rare"?"#b8adff":cc==="is-hoarded"?"#ffcc55":cc==="is-projected"?"#f06858":"#7c6df0";
 
-  // Smooth bezier path
   function bezierPath(pts){
     if(pts.length<2) return "";
     let d=`M${xS(pts[0].t).toFixed(1)},${yS(pts[0].v).toFixed(1)}`;
@@ -1081,7 +1057,6 @@ document.getElementById("modal-x").addEventListener("click",closeModal);
 document.getElementById("modal-ov").addEventListener("click",e=>{if(e.target===e.currentTarget)closeModal();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 
-// ── Picker search (for trade post) ──
 function setupPicker(side){
   const inp=document.getElementById(side+"-search");
   const drop=document.getElementById(side+"-drop");
@@ -1095,10 +1070,8 @@ function setupPicker(side){
     const q=inp.value.trim();
     if(!q){drop.classList.remove("show");return;}
     timer=setTimeout(async()=>{
-      // search from cached flat list first
       let results=allItemsFlat.filter(i=>i.name.toLowerCase().includes(q.toLowerCase())).slice(0,8);
       if(!results.length){
-        // live search
         try{const d=await fetchPage(1,q);results=(d.items||[]).slice(0,8);results.forEach(i=>itemCache[i.id]=i);}catch(e){}
       }
       if(!results.length){drop.innerHTML=`<div class="pd-none">No items found</div>`;drop.classList.add("show");return;}
@@ -1148,12 +1121,10 @@ window.unpickItem=function(side,i){(side==="offer"?offerItems:wantItems).splice(
 function updateTradeLimitInfo(){
   const el=document.getElementById("trade-limit-info");
   if(!discordUser||!el) return;
-  // Will be updated when trades load
 }
 
 function showTradeErr(m){const e=document.getElementById("trade-err");e.textContent=m;e.style.display=m?"":"none";}
 
-// ── Post trade ──
 document.getElementById("trade-post-btn").addEventListener("click",async()=>{
   if(!discordUser){alert("Sign in with Discord first.");return;}
   showTradeErr("");
@@ -1175,7 +1146,6 @@ document.getElementById("trade-post-btn").addEventListener("click",async()=>{
     offerItems=[];wantItems=[];
     renderPickerChips("offer");renderPickerChips("want");
     loadTrades();
-    // switch to trades page
     document.querySelectorAll(".ntab").forEach(b=>b.classList.remove("active"));
     document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
     document.querySelector('[data-page="trades"]').classList.add("active");
@@ -1184,7 +1154,6 @@ document.getElementById("trade-post-btn").addEventListener("click",async()=>{
   finally{btn.disabled=false;btn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Post Ad`;}
 });
 
-// ── Load trades ──
 let tradeSearchTimer;
 document.getElementById("trade-search").addEventListener("input",e=>{
   clearTimeout(tradeSearchTimer);
@@ -1201,7 +1170,6 @@ async function loadTrades(q=""){
       list.innerHTML=`<div class="empty"><div class="empty-ico">⇄</div><h3>No trade ads${q?" matching":"" } yet</h3><p>${q?"Try a different search":"Post one above!"}</p></div>`;
       return;
     }
-    // count mine
     const mine=discordUser?trades.filter(t=>t.discordId===discordUser.id):[];
     document.getElementById("trade-limit-info").textContent=discordUser?`${mine.length}/5 active ads`:"";
     list.innerHTML=trades.map(ad=>renderTradeCard(ad)).join("");
@@ -1290,13 +1258,11 @@ window.deleteTrade=async function(id){
   }catch(e){alert(e.message);}
 };
 
-// ── Player lookup + limited scanner ──
 document.getElementById("player-btn").addEventListener("click",()=>{const v=document.getElementById("player-input").value.trim();if(v)lookupPlayer(v);});
 document.getElementById("player-input").addEventListener("keydown",e=>{if(e.key==="Enter"){const v=e.target.value.trim();if(v)lookupPlayer(v);}});
 
 window.lookupPlayer=async function(q, knownUsername){
   const res=document.getElementById("player-result");
-  // switch to player tab
   document.querySelectorAll(".ntab").forEach(b=>b.classList.remove("active"));
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.querySelector('[data-page="players"]').classList.add("active");
@@ -1304,8 +1270,6 @@ window.lookupPlayer=async function(q, knownUsername){
   document.getElementById("player-input").value=q;
   res.innerHTML=`<div class="spinner"></div>`;
 
-  // If q is numeric it's already a uid (passed from owner chip).
-  // If it's a username, search cached owner lists for their numeric id.
   let uid = /^\d+$/.test(q) ? q : null;
   let tradeUsername = knownUsername || (uid ? q : q);
   let u = { username: tradeUsername, thumbnail: null, description: null, level: null, registeredAt: null, lastSeenAt: null };
@@ -1331,7 +1295,6 @@ window.lookupPlayer=async function(q, knownUsername){
     return;
   }
 
-  // Build profile card — works with or without Polytoria data
   res.innerHTML=`<div class="card">
     <div class="profile-hdr">
       ${u?.thumbnail?`<img class="pav" src="${esc(u.thumbnail)}" onerror="this.style.display='none'">`:`<div class="pav" style="display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--txt3)">◈</div>`}
@@ -1366,7 +1329,6 @@ window.lookupPlayer=async function(q, knownUsername){
     <div id="rap-history-wrap" style="margin-top:18px"></div>
   </div>`;
 
-  // Scan limiteds from polytoria.trade owners data + our item cache
   scanPlayerInventory(uid, tradeUsername);
   loadRapHistory(uid);
 };
@@ -1390,9 +1352,6 @@ async function scanPlayerInventory(uid, username){
 
   const ownedMap=new Map(); // itemId -> {item, serials[]}
 
-  // ── Strategy: scan ALL tracked items via getAllItemOwners, match by userId.
-  //    History gives us extra item IDs the user owns that aren't in our catalog.
-  // ── Step 1: collect item IDs from getUsersLatestHistory (recent activity seed) ──
   const historyItemIds = new Set();
   const historyItems = new Map(); // itemId -> item object (embedded in response)
   try{
@@ -1402,7 +1361,6 @@ async function scanPlayerInventory(uid, username){
     if(r.ok){
       const j=await r.json();
       const entries=j[0]?.result?.data||[];
-      // Extract username from first entry
       if(entries.length){
         const name=entries[0].username||entries[0].user?.username||null;
         if(name){ const pname=document.querySelector(".pname"); if(pname) pname.textContent=name; username=name; }
@@ -1417,19 +1375,16 @@ async function scanPlayerInventory(uid, username){
     }
   }catch(e){}
 
-  // ── Step 2: build full item list = our catalog + any extras from history ──
   const allToScan = [...allItemsFlat];
   const catalogIds = new Set(allItemsFlat.map(i=>String(i.id)));
   for(const [id, item] of historyItems){
     if(!catalogIds.has(id)) allToScan.push(item);
   }
-  // Also add stub items for history IDs we don't have item data for
   for(const id of historyItemIds){
     if(!catalogIds.has(id) && !historyItems.has(id))
       allToScan.push({id:Number(id), name:"Item "+id, thumbnailUrl:"", recentAverage:0, _stub:true});
   }
 
-  // ── Step 3: scan all items via getAllItemOwners, match by userId ──
   const uidStr = String(uid);
   const lowerName = username.toLowerCase();
   let scanned = 0;
@@ -1448,9 +1403,7 @@ async function scanPlayerInventory(uid, username){
       if(!r.ok){scanned++;return;}
       const j=await r.json();
       const owners=j[0]?.result?.data||[];
-      // Cache on item for future lookups
       item._ownersFetched=true; item._ownersList=owners;
-      // Also update item data if it was a stub
       const itemData=j[1]?.result?.data||j[0]?.result?.data2||null;
       if(item._stub && itemData?.name) Object.assign(item, itemData);
       const m=owners.find(o=>String(o.id)===uidStr||(o.username||"").toLowerCase()===lowerName);
@@ -1524,23 +1477,19 @@ async function loadRapHistory(uid){
   }catch(e){}
 }
 
-// ── Init ──
 checkAuth();
 loadItems();
 preloadItems();
 setupPicker("offer");
 setupPicker("want");
 
-// If landed on trades tab (e.g. via nav link)
 window.addEventListener("load",()=>{
   if(document.getElementById("page-trades").classList.contains("active")) loadTrades();
 });
 
-// ── DM + Notification System ──
 let dmPeerId=null, dmPeerName="", dmPeerAv="", dmPollTimer=null, dmLastTs=0, dmUnread=0, dmSoundUnlocked=false;
 const DM_POLL=4000;
 
-// Unlock sound on first interaction
 document.addEventListener("click",()=>{ dmSoundUnlocked=true; },{once:true});
 
 function playNotifSound(){
@@ -1576,9 +1525,7 @@ function updateDmBadge(n){
   else { badge.style.display="none"; }
 }
 
-// Show DM button only when logged in
 
-// Poll for new messages
 async function pollDms(){
   if(!discordUser) return;
   try{
@@ -1587,7 +1534,6 @@ async function pollDms(){
     const d=await r.json();
     const newUnread=d.total||0;
     if(newUnread>dmUnread){
-      // New message arrived
       const newMsgs=d.latest||[];
       for(const m of newMsgs){
         showToast(m.fromUsername, m.text, m.fromAvatar?`https://cdn.discordapp.com/avatars/${m.fromId}/${m.fromAvatar}.png?size=32`:"",
@@ -1595,7 +1541,6 @@ async function pollDms(){
       }
     }
     updateDmBadge(newUnread);
-    // If DM window is open for current peer, refresh messages
     if(dmPeerId && document.getElementById("dm-modal").classList.contains("open")){
       loadDmThread(dmPeerId);
     }
@@ -1606,7 +1551,7 @@ window.openDmInbox=async function(){
   dmPeerId=null; dmPeerName="Messages"; dmPeerAv="";
   document.getElementById("dm-modal").classList.add("open");
   document.getElementById("dm-peer-name").textContent="Messages";
-  document.getElementById("dm-peer-av").src="";
+  const _av=document.getElementById("dm-peer-av"); _av.src=""; _av.style.display="none";
   document.getElementById("dm-input-row").style.display="none";
   const inbox=document.getElementById("dm-inbox");
   inbox.innerHTML=`<div style="padding:20px;text-align:center"><div class="spinner"></div></div>`;
@@ -1634,7 +1579,7 @@ window.openDmThread=async function(peerId, peerName, peerAvatar){
   modal.classList.add("open");
   document.getElementById("dm-peer-name").textContent=peerName;
   const avEl=document.getElementById("dm-peer-av");
-  avEl.src=peerAvatar?`https://cdn.discordapp.com/avatars/${peerId}/${peerAvatar}.png?size=32`:"";
+  avEl.src=peerAvatar?`https://cdn.discordapp.com/avatars/${peerId}/${peerAvatar}.png?size=32`:""; avEl.style.display=peerAvatar?"block":"none";
   document.getElementById("dm-input-row").style.display="flex";
   document.getElementById("dm-input").focus();
   const view=document.getElementById("dm-view");
@@ -1681,9 +1626,7 @@ document.getElementById("dm-close-btn").addEventListener("click",()=>{
   document.getElementById("dm-modal").classList.remove("open");
 });
 
-// Start polling when logged in (checkAuth sets discordUser)
 const _origCheckAuth=checkAuth;
-// Poll every 4s after auth confirmed
 function startDmPolling(){
   if(!discordUser) return;
   pollDms();
