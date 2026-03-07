@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PolyValue — Polytoria Limited Tracker</title>
+<link rel="icon" type="image/png" href="/static/logo.png">
+<meta name="description" content="Track Polytoria limited item values, inventories, and trade ads.">
+<meta property="og:title" content="PolyValue — Polytoria Limited Tracker">
+<meta property="og:description" content="Track Polytoria limited item values, inventories, and trade ads.">
+<meta property="og:image" content="https://polyvalue.xyz/static/preview.png">
+<meta property="og:url" content="https://polyvalue.xyz">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PolyValue — Polytoria Limited Tracker">
+<meta name="twitter:description" content="Track Polytoria limited item values, inventories, and trade ads.">
+<meta name="twitter:image" content="https://polyvalue.xyz/static/preview.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -187,6 +198,43 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 /* TRADE ADS */
 .trade-wrap{display:grid;grid-template-columns:1fr;gap:14px}
 .tcard{background:var(--bg2);border:1px solid var(--border);border-radius:15px;padding:20px;animation:fadeUp .25s ease both;transition:.18s}
+.tc-dm-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:5px 11px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--txt2);cursor:pointer;transition:.12s}
+.tc-dm-btn:hover{border-color:rgba(124,109,240,.4);color:var(--accent2);background:var(--bg4)}
+.tc-trade-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:5px 11px;border-radius:8px;border:1px solid rgba(0,232,152,.25);background:rgba(0,232,152,.06);color:var(--green);cursor:pointer;transition:.12s;text-decoration:none}
+.tc-trade-btn:hover{background:rgba(0,232,152,.12);border-color:rgba(0,232,152,.4)}
+/* Notification toast */
+#notif-stack{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.notif-toast{display:flex;align-items:center;gap:10px;background:var(--bg4);border:1px solid var(--border);border-radius:12px;padding:10px 14px;min-width:240px;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,.4);pointer-events:all;animation:slideInRight .2s ease both;cursor:pointer}
+.notif-toast.out{animation:slideOutRight .2s ease both}
+@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(120%);opacity:0}}
+.notif-av{width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--bg5)}
+.notif-body{flex:1;min-width:0}
+.notif-from{font-size:11px;font-weight:700;color:var(--txt)}
+.notif-msg{font-size:11px;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* DM badge */
+.dm-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:var(--red);border-radius:8px;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 3px;pointer-events:none}
+/* DM modal */
+#dm-modal{position:fixed;inset:0;z-index:8000;display:none;align-items:flex-end;justify-content:flex-end;padding:20px;pointer-events:none}
+#dm-modal.open{display:flex}
+#dm-box{width:320px;height:440px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;display:flex;flex-direction:column;box-shadow:0 16px 64px rgba(0,0,0,.6);pointer-events:all;animation:fadeUp .2s ease both}
+.dm-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.dm-head-title{font-size:13px;font-weight:700;flex:1}
+.dm-close{background:none;border:none;color:var(--txt3);cursor:pointer;font-size:16px;padding:2px 6px}
+.dm-close:hover{color:var(--txt)}
+.dm-msgs{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.dm-msg{max-width:80%;padding:7px 11px;border-radius:10px;font-size:12px;line-height:1.4;word-break:break-word}
+.dm-msg.mine{background:var(--accent3);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.dm-msg.theirs{background:var(--bg4);color:var(--txt);align-self:flex-start;border-bottom-left-radius:3px}
+.dm-msg-meta{font-size:9px;opacity:.5;margin-top:2px}
+.dm-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
+.dm-input-row input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--txt);outline:none}
+.dm-input-row input:focus{border-color:rgba(124,109,240,.4)}
+.dm-send{background:var(--accent);border:none;border-radius:8px;padding:7px 12px;color:#fff;cursor:pointer;font-size:12px;font-weight:600}
+.dm-send:hover{background:var(--accent3)}
+.dm-inbox{flex:1;overflow-y:auto;padding:8px}
+.dm-thread-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:.12s}
+.dm-thread-item:hover{background:var(--bg3)}
 .tcard:hover{border-color:rgba(124,109,240,.2);box-shadow:0 4px 24px rgba(124,109,240,.07)}
 .tc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .tc-user{display:flex;align-items:center;gap:9px}
@@ -319,6 +367,10 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
       <input class="gsearch" id="gsearch" placeholder="Search items…" autocomplete="off">
       <div class="search-preview" id="search-preview"></div>
     </div>
+    <button id="dm-nav-btn" onclick="discordUser?openDmInbox():window.location.href=API+'/auth/discord'" style="position:relative;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;color:var(--txt2);transition:.12s" title="Messages">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="dm-badge" id="dm-badge" style="display:none">0</span>
+    </button>
     <div id="auth-area"></div>
   </div>
 </nav>
@@ -390,7 +442,10 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
             <div class="post-lmt" id="want-lmt" style="display:none"></div>
           </div>
         </div>
-        <div style="margin-top:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="inp" id="poly-username" placeholder="Polytoria username (optional)" style="flex:1;min-width:140px;max-width:240px;font-size:12px;padding:7px 11px">
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button class="btn btn-p" id="trade-post-btn">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Post Ad
@@ -433,6 +488,35 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
     <div id="modal-content"></div>
   </div>
 </div>
+
+<!-- Notification toast stack -->
+<div id="notif-stack"></div>
+
+<!-- DM modal -->
+<div id="dm-modal">
+  <div id="dm-box">
+    <div class="dm-head">
+      <div class="dm-av-wrap" style="position:relative">
+        <img id="dm-peer-av" class="notif-av" src="" onerror="this.style.opacity=.2">
+      </div>
+      <div class="dm-head-title" id="dm-peer-name">Messages</div>
+      <button class="dm-close" id="dm-close-btn">✕</button>
+    </div>
+    <!-- inbox list or message thread -->
+    <div id="dm-view" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+      <div class="dm-inbox" id="dm-inbox"></div>
+    </div>
+    <div class="dm-input-row" id="dm-input-row" style="display:none">
+      <input id="dm-input" placeholder="Message…" maxlength="500">
+      <button class="dm-send" id="dm-send-btn">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification chime -->
+<audio id="notif-sound" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFkZSXmZqbmpqZl5SQi4WAfHh0b2tmYl5bWFZVVFRUVVZYW19jZ2xxdnp/g4eKjY+RkpKSkZCOi4iFgX57eHVzcXBwcHFyc3V3eny AgoSGiImKi4uKiomIhoSCgH59e3p5eHh4eXp7fX9/gIGCg4OEhISEg4KBgH9+fXx7e3t7e3t8fX5/gIGCg4SEhYWFhYSEg4KBgH9+fnx8e3t7e3t8fX5/gIGCg4SEhISEg4OCgYB/fn18e3t7e3x8fX5+gIGCg4OEhISEg4KCgYB/fn18e3t6enp7fH1+f4CBgoOEhISFhYWEg4KBgH9+fXx7e3t7fHx9fn+AgYKDhISFhYWEg4OCgYB/fn18e3t7" type="audio/wav">
+</audio>
 
 <div class="gtip" id="gtip"></div>
 <div class="gcross" id="gcross"></div>
@@ -531,6 +615,7 @@ async function checkAuth(){
     discordUser=d.loggedIn?d:null;
     renderAuthArea();
     renderPostForm();
+    if(discordUser) setTimeout(startDmPolling,500);
   }catch(e){renderAuthArea();}
 }
 
@@ -1081,7 +1166,8 @@ document.getElementById("trade-post-btn").addEventListener("click",async()=>{
       headers:{"content-type":"application/json"},
       body:JSON.stringify({
         offer:offerItems.map(i=>({id:i.id,name:i.name,thumbnailUrl:i.thumbnailUrl,rap:i.recentAverage,tags:i.tags,stats:i.stats})),
-        want: wantItems.map(i=>({id:i.id,name:i.name,thumbnailUrl:i.thumbnailUrl,rap:i.recentAverage,tags:i.tags,stats:i.stats}))
+        want: wantItems.map(i=>({id:i.id,name:i.name,thumbnailUrl:i.thumbnailUrl,rap:i.recentAverage,tags:i.tags,stats:i.stats})),
+        polyUsername: document.getElementById("poly-username").value.trim()||null
       })
     });
     const d=await r.json();
@@ -1145,9 +1231,16 @@ function renderTradeCard(ad){
       </div>
       <div class="tc-actions">
         <span class="tc-time">${timeAgo(ad.time)}</span>
+        ${!isMine&&discordUser?`<button class="tc-dm-btn" onclick="openDmThread('${ad.discordId}','${esc(ad.username)}','${ad.avatar||''}')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> DM
+        </button>`:""}
+        ${ad.polyUsername?`<a class="tc-trade-btn" href="https://polytoria.com/trade/new/${encodeURIComponent(ad.polyUsername)}" target="_blank">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg> Trade
+        </a>`:""}
         ${isMine?`<button class="tc-del" onclick="deleteTrade('${ad.id}')">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Remove
         </button>`:""}
+      </div>
       </div>
     </div>
     <div class="tc-body">
@@ -1442,6 +1535,160 @@ setupPicker("want");
 window.addEventListener("load",()=>{
   if(document.getElementById("page-trades").classList.contains("active")) loadTrades();
 });
+
+// ── DM + Notification System ──
+let dmPeerId=null, dmPeerName="", dmPeerAv="", dmPollTimer=null, dmLastTs=0, dmUnread=0, dmSoundUnlocked=false;
+const DM_POLL=4000;
+
+// Unlock sound on first interaction
+document.addEventListener("click",()=>{ dmSoundUnlocked=true; },{once:true});
+
+function playNotifSound(){
+  if(!dmSoundUnlocked) return;
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.setValueAtTime(880,ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(660,ctx.currentTime+0.12);
+    g.gain.setValueAtTime(0.15,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.3);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime+0.3);
+  }catch(e){}
+}
+
+function showToast(from, msg, avatarUrl, onClick){
+  const stack=document.getElementById("notif-stack");
+  const el=document.createElement("div");
+  el.className="notif-toast";
+  el.innerHTML=`<img class="notif-av" src="${esc(avatarUrl||"")}" onerror="this.style.opacity=.2"><div class="notif-body"><div class="notif-from">${esc(from)}</div><div class="notif-msg">${esc(msg)}</div></div>`;
+  el.onclick=()=>{ el.classList.add("out"); setTimeout(()=>el.remove(),200); if(onClick) onClick(); };
+  stack.appendChild(el);
+  playNotifSound();
+  setTimeout(()=>{ if(el.parentNode){ el.classList.add("out"); setTimeout(()=>el.remove(),200); } },5000);
+}
+
+function updateDmBadge(n){
+  dmUnread=n;
+  const badge=document.getElementById("dm-badge");
+  if(!badge) return;
+  if(n>0){ badge.style.display="flex"; badge.textContent=n>9?"9+":n; }
+  else { badge.style.display="none"; }
+}
+
+// Show DM button only when logged in
+
+// Poll for new messages
+async function pollDms(){
+  if(!discordUser) return;
+  try{
+    const r=await fetch(API+"/dm/unread",{credentials:"include"});
+    if(!r.ok) return;
+    const d=await r.json();
+    const newUnread=d.total||0;
+    if(newUnread>dmUnread){
+      // New message arrived
+      const newMsgs=d.latest||[];
+      for(const m of newMsgs){
+        showToast(m.fromUsername, m.text, m.fromAvatar?`https://cdn.discordapp.com/avatars/${m.fromId}/${m.fromAvatar}.png?size=32`:"",
+          ()=>openDmThread(m.fromId, m.fromUsername, m.fromAvatar||""));
+      }
+    }
+    updateDmBadge(newUnread);
+    // If DM window is open for current peer, refresh messages
+    if(dmPeerId && document.getElementById("dm-modal").classList.contains("open")){
+      loadDmThread(dmPeerId);
+    }
+  }catch(e){}
+}
+
+window.openDmInbox=async function(){
+  dmPeerId=null; dmPeerName="Messages"; dmPeerAv="";
+  document.getElementById("dm-modal").classList.add("open");
+  document.getElementById("dm-peer-name").textContent="Messages";
+  document.getElementById("dm-peer-av").src="";
+  document.getElementById("dm-input-row").style.display="none";
+  const inbox=document.getElementById("dm-inbox");
+  inbox.innerHTML=`<div style="padding:20px;text-align:center"><div class="spinner"></div></div>`;
+  document.getElementById("dm-view").innerHTML="";
+  document.getElementById("dm-view").appendChild(inbox);
+  try{
+    const r=await fetch(API+"/dm/inbox",{credentials:"include"});
+    const threads=await r.json();
+    if(!threads.length){ inbox.innerHTML=`<div style="padding:20px;text-align:center;font-size:12px;color:var(--txt3)">No messages yet</div>`; return; }
+    inbox.innerHTML=threads.map(t=>`
+      <div class="dm-thread-item" onclick="openDmThread('${t.peerId}','${esc(t.peerName)}','${t.peerAvatar||''}')">
+        <img class="notif-av" src="${t.peerAvatar?`https://cdn.discordapp.com/avatars/${t.peerId}/${t.peerAvatar}.png?size=32`:""}" onerror="this.style.opacity=.2">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:var(--txt)">${esc(t.peerName)}</div>
+          <div style="font-size:11px;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.lastMsg||"")}</div>
+        </div>
+        ${t.unread?`<span style="background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:8px;padding:2px 6px">${t.unread}</span>`:""}
+      </div>`).join("");
+  }catch(e){ inbox.innerHTML=`<div style="padding:20px;text-align:center;font-size:12px;color:var(--red)">Failed to load</div>`; }
+};
+
+window.openDmThread=async function(peerId, peerName, peerAvatar){
+  dmPeerId=String(peerId); dmPeerName=peerName; dmPeerAv=peerAvatar;
+  const modal=document.getElementById("dm-modal");
+  modal.classList.add("open");
+  document.getElementById("dm-peer-name").textContent=peerName;
+  const avEl=document.getElementById("dm-peer-av");
+  avEl.src=peerAvatar?`https://cdn.discordapp.com/avatars/${peerId}/${peerAvatar}.png?size=32`:"";
+  document.getElementById("dm-input-row").style.display="flex";
+  document.getElementById("dm-input").focus();
+  const view=document.getElementById("dm-view");
+  view.innerHTML=`<div class="dm-msgs" id="dm-msgs"><div style="padding:20px;text-align:center"><div class="spinner"></div></div></div>`;
+  await loadDmThread(peerId);
+};
+
+async function loadDmThread(peerId){
+  try{
+    const r=await fetch(API+"/dm/thread/"+peerId,{credentials:"include"});
+    const msgs=await r.json();
+    const el=document.getElementById("dm-msgs");
+    if(!el) return;
+    const wasAtBottom=el.scrollHeight-el.scrollTop-el.clientHeight<60;
+    el.innerHTML=msgs.map(m=>{
+      const mine=m.fromId===discordUser?.id;
+      return `<div style="display:flex;flex-direction:column;align-items:${mine?"flex-end":"flex-start"}">
+        <div class="dm-msg ${mine?"mine":"theirs"}">${esc(m.text)}</div>
+        <div class="dm-msg-meta">${timeAgo(m.ts)}</div>
+      </div>`;
+    }).join("");
+    if(wasAtBottom||msgs.length<2) el.scrollTop=el.scrollHeight;
+    updateDmBadge(Math.max(0,dmUnread-(msgs.filter(m=>m.fromId!==discordUser?.id&&!m.read).length)));
+  }catch(e){}
+}
+
+document.getElementById("dm-send-btn").addEventListener("click", sendDm);
+document.getElementById("dm-input").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); sendDm(); }});
+
+async function sendDm(){
+  const inp=document.getElementById("dm-input");
+  const text=inp.value.trim();
+  if(!text||!dmPeerId) return;
+  inp.value="";
+  try{
+    await fetch(API+"/dm/send",{method:"POST",credentials:"include",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({toId:dmPeerId,toUsername:dmPeerName,toAvatar:dmPeerAv,text})});
+    await loadDmThread(dmPeerId);
+  }catch(e){ inp.value=text; }
+}
+
+document.getElementById("dm-close-btn").addEventListener("click",()=>{
+  document.getElementById("dm-modal").classList.remove("open");
+});
+
+// Start polling when logged in (checkAuth sets discordUser)
+const _origCheckAuth=checkAuth;
+// Poll every 4s after auth confirmed
+function startDmPolling(){
+  if(!discordUser) return;
+  pollDms();
+  setInterval(pollDms, DM_POLL);
+}
 </script>
 </body>
 </html>
