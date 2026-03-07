@@ -18,6 +18,18 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+[data-theme="light"]{
+  --bg:#f0f0f8;--bg2:#ffffff;--bg3:#e8e8f0;--bg4:#d8d8ec;--bg5:#c8c8e0;
+  --txt:#0d0d1a;--txt2:#4a4a6a;--txt3:#8a8aaa;
+  --border:#d0d0e8;
+}
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--bg5);border-radius:24px;transition:.2s}
+.toggle-slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.toggle-switch input:checked+.toggle-slider{background:var(--accent)}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
+
 :root{
   --bg:#06060e;--bg2:#0d0d1a;--bg3:#131325;--bg4:#1a1a30;--bg5:#22223c;
   --txt:#f0f0ff;--txt2:#6e6e9a;--txt3:#3a3a58;
@@ -565,6 +577,18 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
 
 
 <div id="notif-stack"></div>
+
+<!-- Custom confirm modal -->
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;width:320px;max-width:90vw;text-align:center;animation:popIn .18s ease">
+    <div id="confirm-title" style="font-size:15px;font-weight:700;margin-bottom:8px"></div>
+    <div id="confirm-msg" style="font-size:13px;color:var(--txt2);margin-bottom:20px;line-height:1.5"></div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button id="confirm-cancel" class="btn" style="flex:1;background:var(--bg4);color:var(--txt2)">Cancel</button>
+      <button id="confirm-ok" class="btn" style="flex:1;background:var(--red);color:#fff;border-color:var(--red)">Report</button>
+    </div>
+  </div>
+</div>
 
 
 <div id="dm-modal">
@@ -1780,6 +1804,7 @@ function renderFakeMessages(){
   });
 }
 
+const chatRenderedIds=new Set();
 async function loadChat(init=false){
   if(!discordUser) return;
   try{
@@ -1789,8 +1814,11 @@ async function loadChat(init=false){
     chatLastTs=msgs[msgs.length-1].ts;
     const container=document.getElementById("chat-msgs");
     if(!container) return;
+    if(init){ container.innerHTML=""; chatRenderedIds.clear(); }
     const atBottom=container.scrollHeight-container.scrollTop-container.clientHeight<80;
     for(const m of msgs){
+      if(chatRenderedIds.has(m.id)) continue;
+      chatRenderedIds.add(m.id);
       renderChatMsg(m,container);
       // @mention notification
       if(!init && m.userId!==discordUser?.id){
@@ -1836,13 +1864,32 @@ function showToastSimple(msg){
   setTimeout(()=>d.remove(),2500);
 }
 
+// ── Custom confirm modal ──
+function showConfirm(title, msg, okLabel, okStyle, onOk){
+  const modal=document.getElementById("confirm-modal");
+  document.getElementById("confirm-title").textContent=title;
+  document.getElementById("confirm-msg").textContent=msg;
+  const okBtn=document.getElementById("confirm-ok");
+  okBtn.textContent=okLabel||"OK";
+  okBtn.style.cssText=`flex:1;${okStyle||"background:var(--red);color:#fff;border-color:var(--red)"}`;
+  modal.style.display="flex";
+  const close=()=>{ modal.style.display="none"; okBtn.onclick=null; document.getElementById("confirm-cancel").onclick=null; };
+  okBtn.onclick=()=>{ close(); onOk(); };
+  document.getElementById("confirm-cancel").onclick=close;
+  modal.onclick=e=>{ if(e.target===modal) close(); };
+}
+
+let reportCooldown=false;
 window.reportMsg=function(msgId, username){
   if(!msgId) return;
-  if(confirm(`Report message from ${username}?`)){
+  if(reportCooldown){ showToastSimple("Wait before reporting again."); return; }
+  showConfirm("Report Message", `Report this message from ${username}? It will be reviewed by moderators.`, "Report", "flex:1;background:var(--red);color:#fff;border-color:var(--red)", ()=>{
+    reportCooldown=true;
+    setTimeout(()=>reportCooldown=false, 5000);
     fetch(API+"/chat/report",{method:"POST",credentials:"include",
-      headers:{"content-type":"application/json"},body:JSON.stringify({msgId})});
-    showToastSimple("Message reported.");
-  }
+      headers:{"content-type":"application/json"},body:JSON.stringify({msgId, username})});
+    showToastSimple("Message reported — thanks.");
+  });
 };
 
 function switchChatPage(chatId){
@@ -1852,6 +1899,7 @@ function switchChatPage(chatId){
   const container=document.getElementById("chat-msgs");
   container.innerHTML="";
   chatLastTs=0;
+  chatRenderedIds.clear();
   if(chatId==="global"){
     header.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Global Chat`;
     document.getElementById("chat-input").placeholder="Message everyone…";
@@ -1941,6 +1989,20 @@ document.querySelectorAll(".ntab").forEach(b=>{
 // fix chat login overlay API link
 document.getElementById("chat-login-btn").href=API+"/auth/discord";
 
+// ── Theme ──
+function toggleTheme(){
+  const light=document.documentElement.dataset.theme==="light";
+  document.documentElement.dataset.theme=light?"":"light";
+  localStorage.setItem("pv_theme",light?"dark":"light");
+  document.getElementById("theme-icon").innerHTML=light
+    ?'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+    :'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+}
+(()=>{
+  const saved=localStorage.getItem("pv_theme");
+  if(saved==="light"){ document.documentElement.dataset.theme="light"; document.addEventListener("DOMContentLoaded",()=>{ const icon=document.getElementById("theme-icon"); if(icon) icon.innerHTML='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'; }); }
+})();
+
 // ── Settings Page ──
 function renderSettings(){
   const body=document.getElementById("settings-body");
@@ -1965,14 +2027,18 @@ function renderSettings(){
         <div style="font-size:12px;color:var(--txt2);margin-top:2px">Discord connected</div>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <div>
-        <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px">Notifications</div>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-          <input type="checkbox" id="setting-sound" style="accent-color:var(--accent)" checked> Play sound on new DM or @mention
-        </label>
-      </div>
-      <div style="padding-top:12px;border-top:1px solid var(--border)">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Notifications</div>
+      <label style="display:flex;align-items:center;justify-content:space-between;font-size:13px;cursor:pointer;padding:10px 14px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)">
+        <span>Sound on new DM or @mention</span>
+        <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-sound"><span class="toggle-slider"></span></label>
+      </label>
+      <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-top:8px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Appearance</div>
+      <label style="display:flex;align-items:center;justify-content:space-between;font-size:13px;cursor:pointer;padding:10px 14px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)">
+        <span>Light mode</span>
+        <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-light"><span class="toggle-slider"></span></label>
+      </label>
+      <div style="padding-top:14px;border-top:1px solid var(--border);margin-top:6px">
         <button class="btn" style="background:var(--bg4);color:var(--red);border:1px solid rgba(240,104,88,.3)"
           onclick="fetch(API+'/auth/logout',{method:'POST',credentials:'include'}).then(()=>location.reload())">
           Sign Out
@@ -1981,6 +2047,9 @@ function renderSettings(){
     </div>`;
   document.getElementById("setting-sound").checked=dmSoundUnlocked;
   document.getElementById("setting-sound").addEventListener("change",e=>{ dmSoundUnlocked=e.target.checked; });
+  const lightToggle=document.getElementById("setting-light");
+  lightToggle.checked=document.documentElement.dataset.theme==="light";
+  lightToggle.addEventListener("change",()=>toggleTheme());
 }
 </script>
 </body>
