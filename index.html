@@ -359,13 +359,42 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
 
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px}
 @media(max-width:760px){
-  .nav{padding:0 14px}.nav-tabs .ntab span{display:none}
-  .item-grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:9px}
+  .nav{padding:0 10px;gap:4px}
+  .nav-logo{font-size:13px}
+  .logo-dot{width:6px;height:6px}
+  .nav-tabs{gap:0}
+  .nav-tabs .ntab span{display:none}
+  .ntab{padding:7px 9px}
+  .gsearch-wrap{display:none}
+  .nav-right{gap:6px}
+  .user-name{display:none}
+  .user-pill{padding:4px 8px 4px 4px;gap:5px}
+  .discord-btn{padding:6px 10px;font-size:11px}
+  .discord-btn.out{padding:4px 8px;font-size:10px}
+  .item-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
   .stat-row{grid-template-columns:repeat(2,1fr)}
-  .modal-hero{flex-direction:column}.modal-thumb{width:100%;height:180px}
-  .post-grid{grid-template-columns:1fr 30px 1fr}
-  .tc-body{grid-template-columns:1fr 28px 1fr}
+  .modal-hero{flex-direction:column}.modal-thumb{width:100%;height:160px}
+  .post-grid{grid-template-columns:1fr 28px 1fr}
+  .tc-body{grid-template-columns:1fr 24px 1fr}
+  .tc-actions{flex-wrap:wrap;gap:4px}
   .footer-inner{flex-direction:column}
+  .main{padding:12px 10px}
+  .card{padding:14px}
+  #page-chat>div{height:calc(100vh - 120px)}
+  #page-chat>div>div:first-child{width:160px}
+  .chat-tab{padding:5px 7px;font-size:11px}
+  #dm-modal{padding:10px}
+  #dm-box{width:100%;max-width:100%}
+  .modal{border-radius:12px;margin:0 4px}
+  .modal-ov{padding:2vh 8px 12px}
+}
+@media(max-width:480px){
+  .nav-tabs .ntab{padding:7px 7px}
+  #page-chat>div>div:first-child{width:44px}
+  #page-chat>div>div:first-child .chat-tab div,
+  #page-chat>div>div:first-child [style*="font-size:10px"]{display:none}
+  #page-chat>div>div:first-child .chat-tab{justify-content:center;padding:8px 0}
+  .item-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
 }
 </style>
 </head>
@@ -401,10 +430,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
       <input class="gsearch" id="gsearch" placeholder="Search items…" autocomplete="off">
       <div class="search-preview" id="search-preview"></div>
     </div>
-    <button id="theme-toggle-btn" onclick="toggleTheme()" style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;color:var(--txt2);transition:.12s" title="Toggle light/dark mode">
-      <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-    </button>
-    <button id="dm-nav-btn" onclick="discordUser?openDmInbox():window.location.href=API+'/auth/discord'" style="position:relative;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;color:var(--txt2);transition:.12s" title="Messages">
+<button id="dm-nav-btn" onclick="discordUser?openDmInbox():window.location.href=API+'/auth/discord'" style="position:relative;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;color:var(--txt2);transition:.12s" title="Messages">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span class="dm-badge" id="dm-badge" style="display:none">0</span>
     </button>
@@ -1997,13 +2023,12 @@ function toggleTheme(){
   const light=document.documentElement.dataset.theme==="light";
   document.documentElement.dataset.theme=light?"":"light";
   localStorage.setItem("pv_theme",light?"dark":"light");
-  document.getElementById("theme-icon").innerHTML=light
-    ?'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
-    :'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  const toggle=document.getElementById("setting-light");
+  if(toggle) toggle.checked=!light;
 }
 (()=>{
   const saved=localStorage.getItem("pv_theme");
-  if(saved==="light"){ document.documentElement.dataset.theme="light"; document.addEventListener("DOMContentLoaded",()=>{ const icon=document.getElementById("theme-icon"); if(icon) icon.innerHTML='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'; }); }
+  if(saved==="light") document.documentElement.dataset.theme="light";
 })();
 
 // ── Settings Page ──
