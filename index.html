@@ -975,7 +975,7 @@ function renderCard(item){
 
 // ── 3D card tilt ──
 (function(){
-  const TILT=15;
+  const TILT=4;
   function onMove(e){
     const card=e.currentTarget;
     const r=card.getBoundingClientRect();
@@ -983,6 +983,7 @@ function renderCard(item){
     const cy=(e.clientY-r.top)/r.height-0.5;
     // Set transform directly — no transition juggling, CSS transition handles leave
     card.style.transform=`rotateX(${(-cy*TILT).toFixed(2)}deg) rotateY(${(cx*TILT).toFixed(2)}deg)`;
+    card.style.boxShadow=`0 16px 40px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.3)`;
     if(card._shine){
       card._shine.style.background=`radial-gradient(circle at ${((cx+0.5)*100).toFixed(1)}% ${((cy+0.5)*100).toFixed(1)}%,rgba(255,255,255,.2) 0%,transparent 55%)`;
     }
@@ -990,6 +991,7 @@ function renderCard(item){
   function onLeave(e){
     const card=e.currentTarget;
     card.style.transform="rotateX(0deg) rotateY(0deg)";
+    card.style.boxShadow="";
     if(card._shine) card._shine.style.background="none";
   }
   function attachTilt(card){
