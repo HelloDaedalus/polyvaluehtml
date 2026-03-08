@@ -77,17 +77,17 @@ body.compact-grid .item-card{padding:8px}
   --glow-hoarded:0 0 0 1px rgba(240,184,96,0.3),0 4px 28px rgba(240,184,96,0.15);
   --glow-projected:0 0 0 1px rgba(240,104,152,0.35),0 4px 28px rgba(240,104,152,0.16);
 }
-/* ── Gilded ── black with gold accents */
-[data-theme="gilded"]{
-  --bg:#080700;--bg2:#100f02;--bg3:#181600;--bg4:#221e00;--bg5:#2e2800;
-  --txt:#f8ead0;--txt2:#a08840;--txt3:#584c20;
-  --accent:#c89820;--accent2:#f0c840;--accent3:#987010;
-  --green:#70c060;--red:#d05848;--gold:#f0c840;--orange:#d08030;--blue:#6090d0;
+/* ── Arctic ── icy clean blue-white */
+[data-theme="arctic"]{
+  --bg:#f0f6ff;--bg2:#ffffff;--bg3:#e4eeff;--bg4:#d0e2ff;--bg5:#b8d0f8;
+  --txt:#0a1628;--txt2:#3858a0;--txt3:#7898d0;
+  --accent:#2060e0;--accent2:#4888ff;--accent3:#1040b0;
+  --green:#0a9060;--red:#d03040;--gold:#c08000;--orange:#d06020;--blue:#2060e0;
   --discord:#5865f2;
-  --border:#2e2800;
-  --glow-rare:0 0 0 1px rgba(240,200,64,0.4),0 4px 32px rgba(200,152,32,0.22);
-  --glow-hoarded:0 0 0 1px rgba(240,200,64,0.5),0 4px 28px rgba(240,200,64,0.2);
-  --glow-projected:0 0 0 1px rgba(208,88,72,0.3),0 4px 24px rgba(208,88,72,0.14);
+  --border:#c0d4f0;
+  --glow-rare:0 0 0 1px rgba(32,96,224,0.25),0 4px 24px rgba(32,96,224,0.12);
+  --glow-hoarded:0 0 0 1px rgba(192,128,0,0.22),0 4px 20px rgba(192,128,0,0.1);
+  --glow-projected:0 0 0 1px rgba(208,48,64,0.22),0 4px 20px rgba(208,48,64,0.1);
 }
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
 
@@ -159,10 +159,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
 /* GRID */
 .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
-.icard-wrap{perspective:600px}
-.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:box-shadow .18s ease,border-color .18s ease;position:relative;will-change:transform;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both;transform-style:preserve-3d;transform:rotateX(0deg) rotateY(0deg) translateZ(0)}
+.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:box-shadow .18s ease,border-color .18s ease;position:relative;will-change:transform;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both;transform-style:preserve-3d}
+.icard-inner{border-radius:inherit;overflow:hidden;position:relative;z-index:1}
 .icard:active{filter:brightness(.92)!important}
-.icard-shine{position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:10;transition:background .06s;mix-blend-mode:screen}
+.icard-shine{position:absolute;inset:0;pointer-events:none;z-index:10;transition:background .06s;mix-blend-mode:screen;border-radius:inherit}
 .icard:nth-child(1){animation-delay:.02s}.icard:nth-child(2){animation-delay:.04s}.icard:nth-child(3){animation-delay:.06s}
 .icard:nth-child(4){animation-delay:.08s}.icard:nth-child(5){animation-delay:.10s}.icard:nth-child(6){animation-delay:.12s}
 .icard:nth-child(7){animation-delay:.13s}.icard:nth-child(8){animation-delay:.14s}.icard:nth-child(n+9){animation-delay:.15s}
@@ -175,9 +175,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .img-wrap{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:14px;position:relative;overflow:hidden}
 .img-wrap::after{content:'';position:absolute;inset:0;opacity:0;transition:.2s}
 .icard:hover .img-wrap::after{opacity:1}
-.img-wrap.bg-rare{background:linear-gradient(145deg,#100e28,#1a1540)}.img-wrap.bg-rare::after{background:radial-gradient(circle at 50% 60%,rgba(124,109,240,.14),transparent 65%)}
-.img-wrap.bg-hoarded{background:linear-gradient(145deg,#180e02,#221505)}.img-wrap.bg-hoarded::after{background:radial-gradient(circle at 50% 60%,rgba(255,180,0,.1),transparent 65%)}
-.img-wrap.bg-projected{background:linear-gradient(145deg,#1a0804,#220a06)}.img-wrap.bg-projected::after{background:radial-gradient(circle at 50% 60%,rgba(240,80,40,.1),transparent 65%)}
+.img-wrap.bg-rare{background:linear-gradient(145deg,color-mix(in srgb,var(--accent3) 60%,var(--bg)),color-mix(in srgb,var(--accent3) 30%,var(--bg)))}.img-wrap.bg-rare::after{background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 65%)}
+.img-wrap.bg-hoarded{background:linear-gradient(145deg,color-mix(in srgb,var(--gold) 18%,var(--bg)),color-mix(in srgb,var(--gold) 8%,var(--bg)))}.img-wrap.bg-hoarded::after{background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--gold) 14%,transparent),transparent 65%)}
+.img-wrap.bg-projected{background:linear-gradient(145deg,color-mix(in srgb,var(--red) 18%,var(--bg)),color-mix(in srgb,var(--red) 8%,var(--bg)))}.img-wrap.bg-projected::after{background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--red) 12%,transparent),transparent 65%)}
 .img-wrap.bg-default{background:var(--bg3)}
 .icard-img{width:100%;height:100%;object-fit:contain;transition:transform .22s cubic-bezier(.22,1,.36,1);position:relative;z-index:1}
 .icard:hover .icard-img{transform:scale(1.07) translateY(-3px)}
@@ -958,54 +958,54 @@ function renderCard(item){
   const pp=pips(item.tags,allTags);
   const tp=tagPills(item.tags,allTags);
   return `<div class="icard ${cc}" onclick="openModal(${item.id})">
+    <div class="icard-inner">
     <div class="img-wrap bg-${bg}">
       <img class="icard-img" src="${esc(item.thumbnailUrl||"")}" loading="lazy" alt="" onerror="this.style.opacity=.12">
       ${pp?`<div class="cpips">${pp}</div>`:""}
     </div>
     <div class="icard-body">
       <div class="icard-name" title="${esc(item.name)}">${esc(item.name)}</div>
-      ${item.shorthand?`<div class="icard-aka">${esc(item.shorthand)}</div>`:""}
+      <div class="icard-aka">${item.shorthand?esc(item.shorthand):"&nbsp;"}</div>
       <div class="icard-nums">
         <div class="icard-rap">${item.recentAverage!=null?num(item.recentAverage):"—"}</div>
-        ${item.stats?.value!=null?`<div class="icard-val"><div class="icard-vl">val</div><div class="icard-vn">${num(item.stats.value)}</div></div>`:""}
+        ${item.stats?.value!=null?`<div class="icard-val"><div class="icard-vl">val</div><div class="icard-vn">${num(item.stats.value)}</div></div>`:`<div class="icard-val"><div class="icard-vl">&nbsp;</div><div class="icard-vn" style="opacity:0">—</div></div>`}
       </div>
-      ${tp?`<div class="itags">${tp}</div>`:""}
+      <div class="itags" style="min-height:18px">${tp||""}</div>
+    </div>
     </div>
   </div>`;
 }
 
 // ── 3D card tilt ──
 (function(){
-  const TILT=14, LIFT=20, SCALE=1.03;
+  const TILT=12, LIFT=16, SCALE=1.025;
   function onMove(e){
     const card=e.currentTarget;
     const r=card.getBoundingClientRect();
     const cx=(e.clientX-r.left)/r.width-0.5;
     const cy=(e.clientY-r.top)/r.height-0.5;
-    card.style.transition="box-shadow .18s ease,border-color .18s ease";
+    card.style.transition="box-shadow .12s ease,border-color .12s ease";
     card.style.transform=`rotateX(${(-cy*TILT).toFixed(2)}deg) rotateY(${(cx*TILT).toFixed(2)}deg) translateZ(${LIFT}px) scale(${SCALE})`;
-    // Shine lives outside overflow:hidden so it actually follows the tilt
-    const shine=card._shine;
-    if(shine) shine.style.background=`radial-gradient(circle at ${((cx+0.5)*100).toFixed(1)}% ${((cy+0.5)*100).toFixed(1)}%,rgba(255,255,255,.18) 0%,transparent 60%)`;
+    if(card._shine) card._shine.style.background=`radial-gradient(circle at ${((cx+0.5)*100).toFixed(1)}% ${((cy+0.5)*100).toFixed(1)}%,rgba(255,255,255,.18) 0%,transparent 55%)`;
   }
   function onLeave(e){
     const card=e.currentTarget;
-    card.style.transition="transform .38s cubic-bezier(.22,1,.36,1),box-shadow .18s ease,border-color .18s ease";
+    card.style.transition="transform .45s cubic-bezier(.22,1,.36,1),box-shadow .2s ease,border-color .2s ease";
     card.style.transform="rotateX(0deg) rotateY(0deg) translateZ(0) scale(1)";
     if(card._shine) card._shine.style.background="none";
   }
   function attachTilt(card){
     if(card._tilt) return;
     card._tilt=true;
-    // Wrap in perspective container
-    const wrap=document.createElement("div");
-    wrap.className="icard-wrap";
-    card.parentNode.insertBefore(wrap,card);
-    wrap.appendChild(card);
-    // Shine outside overflow:hidden — on wrap, clipped by border-radius visually
+    // Set perspective on parent grid so all cards share same vanishing point
+    if(card.parentNode&&!card.parentNode._hasPerspective){
+      card.parentNode.style.perspective="1200px";
+      card.parentNode.style.perspectiveOrigin="50% 50%";
+      card.parentNode._hasPerspective=true;
+    }
     const shine=document.createElement("div");
     shine.className="icard-shine";
-    wrap.appendChild(shine);
+    card.appendChild(shine);
     card._shine=shine;
     card.addEventListener("mousemove",onMove);
     card.addEventListener("mouseleave",onLeave);
@@ -2185,16 +2185,17 @@ document.querySelectorAll(".ntab").forEach(b=>{
 document.getElementById("chat-login-btn").href=API+"/auth/discord";
 
 // ── Theme ──
-const THEMES=["default","light","mocha","aether","gilded"];
+const THEMES=["default","light","mocha","aether","arctic"];
 function applyTheme(t){
+  t=THEMES.includes(t)?t:"default";
   document.documentElement.dataset.theme=(t==="default")?"":t;
   localStorage.setItem("pv_theme",t);
   const sel=document.getElementById("setting-theme");
   if(sel) sel.value=t;
 }
 (()=>{
-  const saved=localStorage.getItem("pv_theme")||"default";
-  applyTheme(saved);
+  const saved=localStorage.getItem("pv_theme");
+  applyTheme(saved||"default");
 })();
 
 // ── Settings Page ──
@@ -2232,7 +2233,7 @@ function renderSettings(){
           <option value="light">Light</option>
           <option value="mocha">Mocha</option>
           <option value="aether">Aether</option>
-          <option value="gilded">Gilded</option>
+          <option value="arctic">Arctic</option>
         </select>
       </div>
       <label class="settings-row">
@@ -2270,6 +2271,7 @@ function renderSettings(){
   // Wire up toggles
   const tsel=document.getElementById("setting-theme");
   tsel.value=localStorage.getItem("pv_theme")||"default";
+  if(!tsel.value) tsel.value="default"; // fallback if stored value not in options
   tsel.addEventListener("change",e=>applyTheme(e.target.value));
 
   const st=document.getElementById("setting-sound");
