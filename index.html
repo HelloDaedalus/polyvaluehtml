@@ -158,7 +158,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .pginfo{font-size:11px;color:var(--txt3);font-family:'Space Mono',monospace;margin-left:auto}
 
 /* GRID */
-.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;perspective:800px}
 .icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:box-shadow .18s ease,border-color .18s ease;position:relative;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both}
 .icard-inner{border-radius:inherit;position:relative}
 .icard:active{filter:brightness(.92)!important}
@@ -977,23 +977,22 @@ function renderCard(item){
 
 // ── 3D card tilt ──
 (function(){
-  const TILT=15, LIFT=22, SCALE=1.03;
+  const TILT=15, SCALE=1.03;
   function onMove(e){
     const card=e.currentTarget;
     const r=card.getBoundingClientRect();
-    const cx=(e.clientX-r.left)/r.width-0.5;   // -0.5..0.5
+    const cx=(e.clientX-r.left)/r.width-0.5;
     const cy=(e.clientY-r.top)/r.height-0.5;
     card.style.transition="none";
-    card.style.transform=`perspective(800px) rotateX(${(-cy*TILT).toFixed(2)}deg) rotateY(${(cx*TILT).toFixed(2)}deg) scale(${SCALE}) translateZ(${LIFT}px)`;
+    card.style.transform=`rotateX(${(-cy*TILT).toFixed(2)}deg) rotateY(${(cx*TILT).toFixed(2)}deg) scale(${SCALE})`;
     if(card._shine){
-      const sx=((cx+0.5)*100).toFixed(1), sy=((cy+0.5)*100).toFixed(1);
-      card._shine.style.background=`radial-gradient(circle at ${sx}% ${sy}%,rgba(255,255,255,.2) 0%,transparent 55%)`;
+      card._shine.style.background=`radial-gradient(circle at ${((cx+0.5)*100).toFixed(1)}% ${((cy+0.5)*100).toFixed(1)}%,rgba(255,255,255,.2) 0%,transparent 55%)`;
     }
   }
   function onLeave(e){
     const card=e.currentTarget;
     card.style.transition="transform .5s cubic-bezier(.22,1,.36,1)";
-    card.style.transform="perspective(800px) rotateX(0deg) rotateY(0deg) scale(1) translateZ(0px)";
+    card.style.transform="rotateX(0deg) rotateY(0deg) scale(1)";
     if(card._shine) card._shine.style.background="none";
   }
   function attachTilt(card){
@@ -1003,8 +1002,8 @@ function renderCard(item){
     shine.style.cssText="position:absolute;inset:0;pointer-events:none;z-index:10;border-radius:inherit;mix-blend-mode:screen;transition:background .06s";
     card.appendChild(shine);
     card._shine=shine;
-    card.addEventListener("mousemove",onMove,{passive:true});
-    card.addEventListener("mouseleave",onLeave,{passive:true});
+    card.addEventListener("mousemove",onMove);
+    card.addEventListener("mouseleave",onLeave);
   }
   function scan(root){ root.querySelectorAll(".icard:not([data-tilt])").forEach(c=>{c.dataset.tilt="1";attachTilt(c);}); }
   scan(document);
