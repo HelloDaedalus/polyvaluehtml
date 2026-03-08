@@ -42,14 +42,52 @@ body.compact-grid .item-card{padding:8px}
   --glow-hoarded:0 0 0 1px rgba(255,204,85,0.3),0 4px 32px rgba(255,170,0,0.15);
   --glow-projected:0 0 0 1px rgba(240,104,88,0.3),0 4px 32px rgba(240,80,60,0.15);
 }
+/* ── Light ── */
 [data-theme="light"]{
   --bg:#f4f4fb;--bg2:#ffffff;--bg3:#ebebf7;--bg4:#ddddf0;--bg5:#cecee8;
   --txt:#0d0d1a;--txt2:#55557a;--txt3:#9090b8;
   --accent:#6658e0;--accent2:#8070f0;--accent3:#4a3cc8;
+  --green:#009960;--red:#d93a2b;
   --border:#d4d4ec;
   --glow-rare:0 0 0 1px rgba(102,88,224,0.25),0 4px 24px rgba(102,88,224,0.12);
   --glow-hoarded:0 0 0 1px rgba(180,140,0,0.25),0 4px 24px rgba(180,140,0,0.1);
   --glow-projected:0 0 0 1px rgba(200,60,50,0.25),0 4px 24px rgba(200,60,50,0.1);
+}
+/* ── Mocha ── warm espresso browns */
+[data-theme="mocha"]{
+  --bg:#1a1008;--bg2:#231608;--bg3:#2e1e0e;--bg4:#3a2614;--bg5:#47301c;
+  --txt:#f5e6d0;--txt2:#a88060;--txt3:#6a4e38;
+  --accent:#d4845a;--accent2:#f0a878;--accent3:#a05830;
+  --green:#7ec87a;--red:#e07060;--gold:#e8b840;--orange:#d47830;--blue:#7899c8;
+  --discord:#5865f2;
+  --border:#3a2614;
+  --glow-rare:0 0 0 1px rgba(212,132,90,0.35),0 4px 28px rgba(212,132,90,0.18);
+  --glow-hoarded:0 0 0 1px rgba(232,184,64,0.3),0 4px 24px rgba(232,184,64,0.14);
+  --glow-projected:0 0 0 1px rgba(224,112,96,0.3),0 4px 24px rgba(224,112,96,0.14);
+}
+/* ── Aether ── deep space, dreamy nebula */
+[data-theme="aether"]{
+  --bg:#04020f;--bg2:#080518;--bg3:#0e0824;--bg4:#140d30;--bg5:#1c1440;
+  --txt:#e8d8ff;--txt2:#7a60b8;--txt3:#3e2e70;
+  --accent:#c060f8;--accent2:#e09cff;--accent3:#8030c8;
+  --green:#60d8c8;--red:#f06898;--gold:#f0b860;--orange:#f080a0;--blue:#60a8ff;
+  --discord:#5865f2;
+  --border:#1c1440;
+  --glow-rare:0 0 0 1px rgba(192,96,248,0.4),0 4px 32px rgba(192,96,248,0.2);
+  --glow-hoarded:0 0 0 1px rgba(240,184,96,0.3),0 4px 28px rgba(240,184,96,0.15);
+  --glow-projected:0 0 0 1px rgba(240,104,152,0.35),0 4px 28px rgba(240,104,152,0.16);
+}
+/* ── Gilded ── black with gold accents */
+[data-theme="gilded"]{
+  --bg:#080700;--bg2:#100f02;--bg3:#181600;--bg4:#221e00;--bg5:#2e2800;
+  --txt:#f8ead0;--txt2:#a08840;--txt3:#584c20;
+  --accent:#c89820;--accent2:#f0c840;--accent3:#987010;
+  --green:#70c060;--red:#d05848;--gold:#f0c840;--orange:#d08030;--blue:#6090d0;
+  --discord:#5865f2;
+  --border:#2e2800;
+  --glow-rare:0 0 0 1px rgba(240,200,64,0.4),0 4px 32px rgba(200,152,32,0.22);
+  --glow-hoarded:0 0 0 1px rgba(240,200,64,0.5),0 4px 28px rgba(240,200,64,0.2);
+  --glow-projected:0 0 0 1px rgba(208,88,72,0.3),0 4px 24px rgba(208,88,72,0.14);
 }
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
 
@@ -62,7 +100,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 @keyframes dropDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 
 /* NAV */
-.nav{background:rgba(6,6,14,0.92);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:58px;position:sticky;top:0;z-index:200;backdrop-filter:blur(28px)}
+.nav{background:color-mix(in srgb,var(--bg) 92%,transparent);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:58px;position:sticky;top:0;z-index:200;backdrop-filter:blur(28px)}
 .nav-logo{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;margin-right:20px;display:flex;align-items:center;gap:9px;user-select:none;cursor:default}
 .logo-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2.8s ease infinite}
 .logo-poly{color:var(--accent2)}.logo-v{color:var(--txt)}
@@ -121,8 +159,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
 /* GRID */
 .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
-.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:box-shadow .18s ease,border-color .18s ease;position:relative;will-change:transform;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both;transform-style:preserve-3d;transform:perspective(600px) rotateX(0deg) rotateY(0deg) translateZ(0)}
+.icard-wrap{perspective:600px}
+.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:box-shadow .18s ease,border-color .18s ease;position:relative;will-change:transform;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both;transform-style:preserve-3d;transform:rotateX(0deg) rotateY(0deg) translateZ(0)}
 .icard:active{filter:brightness(.92)!important}
+.icard-shine{position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:10;transition:background .06s;mix-blend-mode:screen}
 .icard:nth-child(1){animation-delay:.02s}.icard:nth-child(2){animation-delay:.04s}.icard:nth-child(3){animation-delay:.06s}
 .icard:nth-child(4){animation-delay:.08s}.icard:nth-child(5){animation-delay:.10s}.icard:nth-child(6){animation-delay:.12s}
 .icard:nth-child(7){animation-delay:.13s}.icard:nth-child(8){animation-delay:.14s}.icard:nth-child(n+9){animation-delay:.15s}
@@ -204,6 +244,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .gline{fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:2000;animation:draw 1.1s ease both}
 .garea{opacity:.15}
 .gtip{position:fixed;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:11px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.5);opacity:0;transition:opacity .1s;z-index:999}
+.sale-ts{position:relative}
+.sale-ts:hover::after{content:attr(title);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:5px 9px;font-size:10px;color:var(--txt2);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.45);z-index:500;pointer-events:none}
 .gtip.show{opacity:1}
 .gcross{position:fixed;width:1px;pointer-events:none;display:none;background:rgba(255,255,255,.1)}
 
@@ -411,7 +453,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
 <body>
 
 <nav class="nav">
-  <div class="nav-logo"><span class="logo-dot"></span><span class="logo-poly">Poly</span><span class="logo-v">Value</span></div>
+  <div class="nav-logo"><span class="logo-dot" id="logo-dot" title="" style="cursor:pointer"></span><span class="logo-poly">Poly</span><span class="logo-v">Value</span></div>
   <div class="nav-tabs">
     <button class="ntab active" data-page="items">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -575,7 +617,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
         <div id="chat-msgs" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding:12px 16px;position:relative"></div>
         <!-- Blurred login overlay (shown when logged out) -->
         <div id="chat-login-overlay" style="display:none;position:absolute;inset:0;z-index:10;flex-direction:column;align-items:center;justify-content:center;gap:12px">
-          <div style="position:absolute;inset:0;backdrop-filter:blur(6px);background:rgba(6,6,14,.4)"></div>
+          <div style="position:absolute;inset:0;backdrop-filter:blur(6px);background:color-mix(in srgb,var(--bg) 40%,transparent)"></div>
           <div style="position:relative;z-index:1;text-align:center">
             <div style="font-size:15px;font-weight:700;margin-bottom:6px">Join the conversation</div>
             <div style="font-size:12px;color:var(--txt2);margin-bottom:16px">Login with Discord to chat</div>
@@ -934,39 +976,47 @@ function renderCard(item){
 
 // ── 3D card tilt ──
 (function(){
-  const TILT=12, LIFT=18, SCALE=1.03;
+  const TILT=14, LIFT=20, SCALE=1.03;
   function onMove(e){
     const card=e.currentTarget;
     const r=card.getBoundingClientRect();
     const cx=(e.clientX-r.left)/r.width-0.5;
     const cy=(e.clientY-r.top)/r.height-0.5;
     card.style.transition="box-shadow .18s ease,border-color .18s ease";
-    card.style.transform=`perspective(600px) rotateX(${(-cy*TILT).toFixed(2)}deg) rotateY(${(cx*TILT).toFixed(2)}deg) translateZ(${LIFT}px) scale(${SCALE})`;
-    if(card._shine) card._shine.style.background=`radial-gradient(circle at ${(cx+0.5)*100}% ${(cy+0.5)*100}%,rgba(255,255,255,.12) 0%,transparent 65%)`;
+    card.style.transform=`rotateX(${(-cy*TILT).toFixed(2)}deg) rotateY(${(cx*TILT).toFixed(2)}deg) translateZ(${LIFT}px) scale(${SCALE})`;
+    // Shine lives outside overflow:hidden so it actually follows the tilt
+    const shine=card._shine;
+    if(shine) shine.style.background=`radial-gradient(circle at ${((cx+0.5)*100).toFixed(1)}% ${((cy+0.5)*100).toFixed(1)}%,rgba(255,255,255,.18) 0%,transparent 60%)`;
   }
   function onLeave(e){
     const card=e.currentTarget;
-    card.style.transition="transform .35s cubic-bezier(.22,1,.36,1),box-shadow .18s ease,border-color .18s ease";
-    card.style.transform="perspective(600px) rotateX(0deg) rotateY(0deg) translateZ(0) scale(1)";
+    card.style.transition="transform .38s cubic-bezier(.22,1,.36,1),box-shadow .18s ease,border-color .18s ease";
+    card.style.transform="rotateX(0deg) rotateY(0deg) translateZ(0) scale(1)";
     if(card._shine) card._shine.style.background="none";
   }
   function attachTilt(card){
     if(card._tilt) return;
     card._tilt=true;
+    // Wrap in perspective container
+    const wrap=document.createElement("div");
+    wrap.className="icard-wrap";
+    card.parentNode.insertBefore(wrap,card);
+    wrap.appendChild(card);
+    // Shine outside overflow:hidden — on wrap, clipped by border-radius visually
     const shine=document.createElement("div");
-    shine.style.cssText="position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:10;transition:background .08s";
-    card.appendChild(shine);
+    shine.className="icard-shine";
+    wrap.appendChild(shine);
     card._shine=shine;
     card.addEventListener("mousemove",onMove);
     card.addEventListener("mouseleave",onLeave);
   }
-  function scan(root){ root.querySelectorAll(".icard").forEach(attachTilt); }
+  function scan(root){ root.querySelectorAll(".icard:not([data-tilt])").forEach(c=>{c.dataset.tilt="1";attachTilt(c);}); }
   scan(document);
   new MutationObserver(muts=>{
     muts.forEach(m=>m.addedNodes.forEach(n=>{
       if(n.nodeType!==1) return;
-      if(n.classList&&n.classList.contains("icard")) attachTilt(n);
-      else n.querySelectorAll&&n.querySelectorAll(".icard").forEach(attachTilt);
+      if(n.classList&&n.classList.contains("icard")&&!n.dataset.tilt){n.dataset.tilt="1";attachTilt(n);}
+      else if(n.querySelectorAll) n.querySelectorAll(".icard:not([data-tilt])").forEach(c=>{c.dataset.tilt="1";attachTilt(c);});
     }));
   }).observe(document.body,{childList:true,subtree:true});
 })();
@@ -1167,15 +1217,21 @@ function renderModal(item,content,cc,graphPts,owners,recent,listing){
     <div style="padding:0 26px 18px" class="fade-up" style="animation-delay:.12s">
       <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:5px">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-        Recent Trades
+        Recent Sales
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        ${recent.slice(0,5).map(t=>`
-          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:11px">
-            <span style="font-weight:600">${esc(t.username||"Unknown")}</span>
-            <span style="color:var(--gold);font-family:'Space Mono';font-size:10px">Serial #${t.serial}</span>
-            <span style="color:var(--txt3)">${t.created_at?t.created_at.slice(0,10):""}</span>
-          </div>`).join("")}
+      <div id="recent-sales-list" style="display:flex;flex-direction:column;gap:4px">
+        ${recent.slice(0,8).map(t=>{
+          const sd=t.created_at?new Date(t.created_at):null;
+          const fullDate=sd?sd.toLocaleString("en-US",{month:"short",day:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"}):"";
+          const shortDate=sd?sd.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"";
+          const price=t.price!=null?num(t.price):(t.sale_price!=null?num(t.sale_price):null);
+          return `<div style="display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:11px">
+            <span style="font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.username||"Unknown")}</span>
+            <span style="color:var(--gold);font-family:Space Mono,monospace;font-size:10px;flex-shrink:0">Serial #${t.serial}</span>
+            ${price?`<span style="color:var(--green);font-family:Space Mono,monospace;font-size:10px;font-weight:700;flex-shrink:0">${price}</span>`:""}
+            ${fullDate?`<span class="sale-ts" title="${fullDate}" style="color:var(--txt3);font-size:10px;flex-shrink:0;cursor:default;border-bottom:1px dashed var(--border);white-space:nowrap">${shortDate}</span>`:""}
+          </div>`;
+        }).join("")}
       </div>
     </div>`:""}
     <div class="mdivider"></div>
@@ -1497,8 +1553,13 @@ document.getElementById("player-input").addEventListener("keydown",e=>{if(e.key=
 window.goToPlayer=function(el){
   const uid=el.dataset.uid;
   const uname=el.dataset.uname;
-  closeModal();
-  lookupPlayer(uid||uname, uname);
+  // Close modal overlay immediately, then navigate once CSS transition finishes
+  const ov=document.getElementById("modal-ov");
+  ov.classList.remove("open");
+  document.getElementById("modal-box").className="modal";
+  document.getElementById("gtip").classList.remove("show");
+  document.getElementById("gcross").style.display="none";
+  setTimeout(()=>lookupPlayer(uid||uname, uname), 180);
 };
 
 window.lookupPlayer=async function(q, knownUsername){
@@ -2124,16 +2185,16 @@ document.querySelectorAll(".ntab").forEach(b=>{
 document.getElementById("chat-login-btn").href=API+"/auth/discord";
 
 // ── Theme ──
-function toggleTheme(){
-  const light=document.documentElement.dataset.theme==="light";
-  document.documentElement.dataset.theme=light?"":"light";
-  localStorage.setItem("pv_theme",light?"dark":"light");
-  const toggle=document.getElementById("setting-light");
-  if(toggle) toggle.checked=!light;
+const THEMES=["default","light","mocha","aether","gilded"];
+function applyTheme(t){
+  document.documentElement.dataset.theme=(t==="default")?"":t;
+  localStorage.setItem("pv_theme",t);
+  const sel=document.getElementById("setting-theme");
+  if(sel) sel.value=t;
 }
 (()=>{
-  const saved=localStorage.getItem("pv_theme");
-  if(saved==="light") document.documentElement.dataset.theme="light";
+  const saved=localStorage.getItem("pv_theme")||"default";
+  applyTheme(saved);
 })();
 
 // ── Settings Page ──
@@ -2164,32 +2225,38 @@ function renderSettings(){
     <div style="display:flex;flex-direction:column;gap:8px">
 
       <div class="settings-section-label">Appearance</div>
+      <div class="settings-row" style="cursor:default">
+        <span>Theme</span>
+        <select id="setting-theme" class="sort-sel" style="padding:5px 28px 5px 10px;font-size:12px;min-width:110px" onclick="event.stopPropagation()">
+          <option value="default">Default</option>
+          <option value="light">Light</option>
+          <option value="mocha">Mocha</option>
+          <option value="aether">Aether</option>
+          <option value="gilded">Gilded</option>
+        </select>
+      </div>
       <label class="settings-row">
-        <span>🌙 Light mode</span>
-        <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-light"><span class="toggle-slider"></span></label>
-      </label>
-      <label class="settings-row">
-        <span>⬛ Compact item grid</span>
+        <span>Compact item grid</span>
         <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-compact"><span class="toggle-slider"></span></label>
       </label>
 
       <div class="settings-section-label" style="margin-top:8px">Notifications</div>
       <label class="settings-row">
-        <span>🔔 Sound on DM / @mention</span>
+        <span>Sound on DM / @mention</span>
         <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-sound"><span class="toggle-slider"></span></label>
       </label>
       <label class="settings-row">
-        <span>💬 Show chat timestamps</span>
+        <span>Show chat timestamps</span>
         <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-timestamps"><span class="toggle-slider"></span></label>
       </label>
 
       <div class="settings-section-label" style="margin-top:8px">Privacy</div>
       <label class="settings-row">
-        <span>📨 Allow DMs from anyone</span>
+        <span>Allow DMs from anyone</span>
         <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-dms-open"><span class="toggle-slider"></span></label>
       </label>
       <label class="settings-row">
-        <span>📊 Save RAP history</span>
+        <span>Save RAP history</span>
         <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-rap-history"><span class="toggle-slider"></span></label>
       </label>
 
@@ -2201,9 +2268,9 @@ function renderSettings(){
     </div>`;
 
   // Wire up toggles
-  const lt=document.getElementById("setting-light");
-  lt.checked=document.documentElement.dataset.theme==="light";
-  lt.addEventListener("change",()=>toggleTheme());
+  const tsel=document.getElementById("setting-theme");
+  tsel.value=localStorage.getItem("pv_theme")||"default";
+  tsel.addEventListener("change",e=>applyTheme(e.target.value));
 
   const st=document.getElementById("setting-sound");
   st.checked=dmSoundUnlocked;
@@ -2229,5 +2296,187 @@ function renderSettings(){
   rap.addEventListener("change",e=>{ localStorage.setItem("pv_rap_history",e.target.checked?"1":"0"); });
 }
 </script>
+
+<!-- ── DRAWING PAGE (easter egg) ── -->
+<div id="draw-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);flex-direction:column">
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border)">
+    <button onclick="closeDraw()" style="background:none;border:none;color:var(--txt2);cursor:pointer;font-size:20px;line-height:1;padding:2px 6px">←</button>
+    <span style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--accent2)">polyvalue doodle<span id="draw-secret" style="color:var(--txt3);font-size:10px;margin-left:8px"></span></span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <!-- colours -->
+      <div id="draw-colors" style="display:flex;gap:4px">
+        <button class="dc" data-c="#f0f0ff" style="background:#f0f0ff" title="White"></button>
+        <button class="dc" data-c="#7c6df0" style="background:#7c6df0" title="Purple"></button>
+        <button class="dc" data-c="#00e898" style="background:#00e898" title="Green"></button>
+        <button class="dc" data-c="#f06858" style="background:#f06858" title="Red"></button>
+        <button class="dc" data-c="#ffcc55" style="background:#ffcc55" title="Gold"></button>
+        <button class="dc" data-c="#55aaff" style="background:#55aaff" title="Blue"></button>
+        <button class="dc" data-c="#ff9944" style="background:#ff9944" title="Orange"></button>
+        <button class="dc" data-c="#06060e" style="background:#06060e;border-color:#333" title="Black"></button>
+      </div>
+      <!-- sizes -->
+      <div style="display:flex;gap:4px">
+        <button class="ds" data-s="3" title="Thin">·</button>
+        <button class="ds" data-s="8" title="Medium">○</button>
+        <button class="ds" data-s="18" title="Thick">●</button>
+        <button class="ds" data-s="40" title="Chonk">◉</button>
+      </div>
+      <button id="draw-eraser" onclick="toggleEraser()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--txt2);cursor:pointer;font-size:12px">⬜ Eraser</button>
+      <button onclick="clearCanvas()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--txt2);cursor:pointer;font-size:12px">🗑 Clear</button>
+      <button onclick="saveDrawing()" style="background:var(--accent);border:none;border-radius:8px;padding:5px 12px;color:#fff;cursor:pointer;font-size:12px;font-weight:600">💾 Save</button>
+    </div>
+  </div>
+  <canvas id="draw-canvas" style="flex:1;display:block;cursor:crosshair;touch-action:none"></canvas>
+</div>
+
+<style>
+.dc{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.2);cursor:pointer;padding:0;transition:.1s;flex-shrink:0}
+.dc.active{border-color:#fff;transform:scale(1.25);box-shadow:0 0 0 2px var(--accent)}
+.ds{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:3px 8px;cursor:pointer;color:var(--txt2);font-size:14px;transition:.1s}
+.ds.active{border-color:var(--accent);color:var(--accent2);background:var(--bg4)}
+</style>
+
+<script>
+(function(){
+  let drawing=false, eraser=false, color="#f0f0ff", size=8, lastX=0, lastY=0;
+  let dotClicks=0, dotTimer=null;
+
+  document.getElementById("logo-dot").addEventListener("click",function(){
+    dotClicks++;
+    clearTimeout(dotTimer);
+    dotTimer=setTimeout(()=>{dotClicks=0;},700);
+    if(dotClicks>=3) openDraw();
+  });
+
+  window.openDraw=function(){
+    const ov=document.getElementById("draw-overlay");
+    ov.style.display="flex";
+    const secrets=["🤫 secret unlocked","✨ you found it","🎨 go wild","🐸 ribbit","💜 made with vibes"];
+    document.getElementById("draw-secret").textContent=secrets[Math.floor(Math.random()*secrets.length)];
+    initCanvas();
+  };
+
+  window.closeDraw=function(){
+    document.getElementById("draw-overlay").style.display="none";
+  };
+
+  function initCanvas(){
+    const canvas=document.getElementById("draw-canvas");
+    const ctx=canvas.getContext("2d");
+    canvas.width=canvas.offsetWidth;
+    canvas.height=canvas.offsetHeight;
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--bg").trim()||"#06060e";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    canvas._ctx=ctx;
+    canvas._ready=true;
+
+    // pick first color
+    document.querySelectorAll(".dc")[0].classList.add("active");
+    document.querySelectorAll(".ds")[1].classList.add("active");
+
+    function pos(e){
+      const r=canvas.getBoundingClientRect();
+      const src=e.touches?e.touches[0]:e;
+      return [src.clientX-r.left, src.clientY-r.top];
+    }
+
+    function startDraw(e){
+      e.preventDefault();
+      drawing=true;
+      [lastX,lastY]=pos(e);
+      const ctx=canvas._ctx;
+      ctx.beginPath();
+      ctx.arc(lastX,lastY,size/2,0,Math.PI*2);
+      ctx.fillStyle=eraser?(getComputedStyle(document.documentElement).getPropertyValue("--bg").trim()||"#06060e"):color;
+      ctx.fill();
+    }
+
+    function doDraw(e){
+      e.preventDefault();
+      if(!drawing) return;
+      const [cx,cy]=pos(e);
+      const ctx=canvas._ctx;
+      ctx.beginPath();
+      ctx.moveTo(lastX,lastY);
+      ctx.lineTo(cx,cy);
+      ctx.strokeStyle=eraser?(getComputedStyle(document.documentElement).getPropertyValue("--bg").trim()||"#06060e"):color;
+      ctx.lineWidth=size;
+      ctx.lineCap="round";
+      ctx.lineJoin="round";
+      ctx.stroke();
+      [lastX,lastY]=[cx,cy];
+    }
+
+    function stopDraw(){ drawing=false; }
+
+    canvas.removeEventListener("mousedown",canvas._sd);
+    canvas.removeEventListener("mousemove",canvas._dd);
+    canvas.removeEventListener("mouseup",canvas._ud);
+    canvas.removeEventListener("touchstart",canvas._ts);
+    canvas.removeEventListener("touchmove",canvas._tm);
+    canvas.removeEventListener("touchend",canvas._te);
+    canvas._sd=startDraw; canvas._dd=doDraw; canvas._ud=stopDraw;
+    canvas._ts=startDraw; canvas._tm=doDraw; canvas._te=stopDraw;
+    canvas.addEventListener("mousedown",canvas._sd);
+    canvas.addEventListener("mousemove",canvas._dd);
+    canvas.addEventListener("mouseup",canvas._ud);
+    canvas.addEventListener("mouseleave",stopDraw);
+    canvas.addEventListener("touchstart",canvas._ts,{passive:false});
+    canvas.addEventListener("touchmove",canvas._tm,{passive:false});
+    canvas.addEventListener("touchend",canvas._te);
+  }
+
+  // Color buttons
+  document.getElementById("draw-colors").addEventListener("click",function(e){
+    const btn=e.target.closest(".dc");
+    if(!btn) return;
+    color=btn.dataset.c;
+    eraser=false;
+    document.getElementById("draw-eraser").style.background="var(--bg3)";
+    document.getElementById("draw-eraser").style.color="var(--txt2)";
+    document.querySelectorAll(".dc").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+  });
+
+  // Size buttons
+  document.querySelectorAll(".ds").forEach(btn=>{
+    btn.addEventListener("click",function(){
+      size=+this.dataset.s;
+      document.querySelectorAll(".ds").forEach(b=>b.classList.remove("active"));
+      this.classList.add("active");
+    });
+  });
+
+  window.toggleEraser=function(){
+    eraser=!eraser;
+    const eb=document.getElementById("draw-eraser");
+    if(eraser){
+      eb.style.background="var(--accent3)";
+      eb.style.color="#fff";
+      document.querySelectorAll(".dc").forEach(b=>b.classList.remove("active"));
+    } else {
+      eb.style.background="var(--bg3)";
+      eb.style.color="var(--txt2)";
+    }
+  };
+
+  window.clearCanvas=function(){
+    const canvas=document.getElementById("draw-canvas");
+    const ctx=canvas._ctx;
+    if(!ctx) return;
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--bg").trim()||"#06060e";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  };
+
+  window.saveDrawing=function(){
+    const canvas=document.getElementById("draw-canvas");
+    const a=document.createElement("a");
+    a.download="polyvalue-doodle.png";
+    a.href=canvas.toDataURL("image/png");
+    a.click();
+  };
+})();
+</script>
+
 </body>
 </html>
