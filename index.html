@@ -159,8 +159,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
 /* GRID */
 .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;perspective:800px}
-.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:box-shadow .18s ease,border-color .18s ease;position:relative;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both;transform-style:preserve-3d;will-change:transform}
-.icard-inner{border-radius:inherit;position:relative}
+.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .18s ease,border-color .18s ease;position:relative;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both;transform-style:preserve-3d;will-change:transform}
 .icard:active{filter:brightness(.92)!important}
 .icard:nth-child(1){animation-delay:.02s}.icard:nth-child(2){animation-delay:.04s}.icard:nth-child(3){animation-delay:.06s}
 .icard:nth-child(4){animation-delay:.08s}.icard:nth-child(5){animation-delay:.10s}.icard:nth-child(6){animation-delay:.12s}
@@ -957,7 +956,6 @@ function renderCard(item){
   const pp=pips(item.tags,allTags);
   const tp=tagPills(item.tags,allTags);
   return `<div class="icard ${cc}" onclick="openModal(${item.id})">
-    <div class="icard-inner">
     <div class="img-wrap bg-${bg}">
       <img class="icard-img" src="${esc(item.thumbnailUrl||"")}" loading="lazy" alt="" onerror="this.style.opacity=.12">
       ${pp?`<div class="cpips">${pp}</div>`:""}
@@ -970,7 +968,6 @@ function renderCard(item){
         ${item.stats?.value!=null?`<div class="icard-val"><div class="icard-vl">val</div><div class="icard-vn">${num(item.stats.value)}</div></div>`:`<div class="icard-val"><div class="icard-vl">&nbsp;</div><div class="icard-vn" style="opacity:0">—</div></div>`}
       </div>
       <div class="itags" style="min-height:18px">${tp||""}</div>
-    </div>
     </div>
   </div>`;
 }
@@ -991,7 +988,7 @@ function renderCard(item){
   }
   function onLeave(e){
     const card=e.currentTarget;
-    card.style.transition="transform .5s cubic-bezier(.22,1,.36,1)";
+    card.style.transition=""; // restore CSS transition (includes transform + box-shadow)
     card.style.transform="rotateX(0deg) rotateY(0deg) scale(1)";
     if(card._shine) card._shine.style.background="none";
   }
