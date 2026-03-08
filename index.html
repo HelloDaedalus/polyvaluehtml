@@ -18,7 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-.icard:active{transform:translateY(-2px) scale(1.008)!important}
+.icard:active{filter:brightness(.92)}
 .toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
 .settings-section-label{font-size:11px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.6px;margin-top:4px;padding-left:2px}
 .settings-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;cursor:pointer;padding:10px 14px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);transition:.12s}
@@ -178,7 +178,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .img-wrap.bg-projected{background:linear-gradient(145deg,color-mix(in srgb,var(--red) 18%,var(--bg)),color-mix(in srgb,var(--red) 8%,var(--bg)))}.img-wrap.bg-projected::after{background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--red) 12%,transparent),transparent 65%)}
 .img-wrap.bg-default{background:var(--bg3)}
 .icard-img{width:100%;height:100%;object-fit:contain;transition:transform .22s cubic-bezier(.22,1,.36,1);position:relative;z-index:1}
-.icard:hover .icard-img{transform:scale(1.07) translateY(-3px)}
+
 .cpips{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:3px;z-index:2}
 .cpip{width:6px;height:6px;border-radius:50%}
 .cpip.rare{background:var(--accent2);box-shadow:0 0 6px var(--accent2)}
@@ -980,7 +980,7 @@ function renderCard(item){
     const r=card.getBoundingClientRect();
     const cx=(e.clientX-r.left)/r.width-0.5;
     const cy=(e.clientY-r.top)/r.height-0.5;
-    card.style.transition="none";
+    // Set transform directly — no transition juggling, CSS transition handles leave
     card.style.transform=`rotateX(${(-cy*TILT).toFixed(2)}deg) rotateY(${(cx*TILT).toFixed(2)}deg) scale(${SCALE})`;
     if(card._shine){
       card._shine.style.background=`radial-gradient(circle at ${((cx+0.5)*100).toFixed(1)}% ${((cy+0.5)*100).toFixed(1)}%,rgba(255,255,255,.2) 0%,transparent 55%)`;
@@ -988,7 +988,6 @@ function renderCard(item){
   }
   function onLeave(e){
     const card=e.currentTarget;
-    card.style.transition=""; // restore CSS transition (includes transform + box-shadow)
     card.style.transform="rotateX(0deg) rotateY(0deg) scale(1)";
     if(card._shine) card._shine.style.background="none";
   }
