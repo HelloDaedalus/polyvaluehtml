@@ -159,10 +159,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
 /* GRID */
 .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
-.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:box-shadow .18s ease,border-color .18s ease;position:relative;will-change:transform;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both;transform-style:preserve-3d}
-.icard-inner{border-radius:inherit;overflow:hidden;position:relative;z-index:1}
+.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:box-shadow .18s ease,border-color .18s ease;position:relative;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both}
+.icard-inner{border-radius:inherit;position:relative}
 .icard:active{filter:brightness(.92)!important}
-.icard-shine{position:absolute;inset:0;pointer-events:none;z-index:10;transition:background .06s;mix-blend-mode:screen;border-radius:inherit}
 .icard:nth-child(1){animation-delay:.02s}.icard:nth-child(2){animation-delay:.04s}.icard:nth-child(3){animation-delay:.06s}
 .icard:nth-child(4){animation-delay:.08s}.icard:nth-child(5){animation-delay:.10s}.icard:nth-child(6){animation-delay:.12s}
 .icard:nth-child(7){animation-delay:.13s}.icard:nth-child(8){animation-delay:.14s}.icard:nth-child(n+9){animation-delay:.15s}
@@ -172,7 +171,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .icard.is-hoarded:hover{box-shadow:0 0 0 1px rgba(255,204,85,.45),0 8px 40px rgba(255,170,0,.25);border-color:rgba(255,204,85,.45)}
 .icard.is-projected{box-shadow:var(--glow-projected);border-color:rgba(240,104,88,0.22)}
 .icard.is-projected:hover{box-shadow:0 0 0 1px rgba(240,104,88,.45),0 8px 40px rgba(200,60,40,.25);border-color:rgba(240,104,88,.45)}
-.img-wrap{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:14px;position:relative;overflow:hidden}
+.img-wrap{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:14px;position:relative;border-radius:var(--radius) var(--radius) 0 0}
 .img-wrap::after{content:'';position:absolute;inset:0;opacity:0;transition:.2s}
 .icard:hover .img-wrap::after{opacity:1}
 .img-wrap.bg-rare{background:linear-gradient(145deg,color-mix(in srgb,var(--accent3) 60%,var(--bg)),color-mix(in srgb,var(--accent3) 30%,var(--bg)))}.img-wrap.bg-rare::after{background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 65%)}
@@ -978,37 +977,34 @@ function renderCard(item){
 
 // ── 3D card tilt ──
 (function(){
-  const TILT=12, LIFT=16, SCALE=1.025;
+  const TILT=15, LIFT=22, SCALE=1.03;
   function onMove(e){
     const card=e.currentTarget;
     const r=card.getBoundingClientRect();
-    const cx=(e.clientX-r.left)/r.width-0.5;
+    const cx=(e.clientX-r.left)/r.width-0.5;   // -0.5..0.5
     const cy=(e.clientY-r.top)/r.height-0.5;
-    card.style.transition="box-shadow .12s ease,border-color .12s ease";
-    card.style.transform=`rotateX(${(-cy*TILT).toFixed(2)}deg) rotateY(${(cx*TILT).toFixed(2)}deg) translateZ(${LIFT}px) scale(${SCALE})`;
-    if(card._shine) card._shine.style.background=`radial-gradient(circle at ${((cx+0.5)*100).toFixed(1)}% ${((cy+0.5)*100).toFixed(1)}%,rgba(255,255,255,.18) 0%,transparent 55%)`;
+    card.style.transition="none";
+    card.style.transform=`perspective(800px) rotateX(${(-cy*TILT).toFixed(2)}deg) rotateY(${(cx*TILT).toFixed(2)}deg) scale(${SCALE}) translateZ(${LIFT}px)`;
+    if(card._shine){
+      const sx=((cx+0.5)*100).toFixed(1), sy=((cy+0.5)*100).toFixed(1);
+      card._shine.style.background=`radial-gradient(circle at ${sx}% ${sy}%,rgba(255,255,255,.2) 0%,transparent 55%)`;
+    }
   }
   function onLeave(e){
     const card=e.currentTarget;
-    card.style.transition="transform .45s cubic-bezier(.22,1,.36,1),box-shadow .2s ease,border-color .2s ease";
-    card.style.transform="rotateX(0deg) rotateY(0deg) translateZ(0) scale(1)";
+    card.style.transition="transform .5s cubic-bezier(.22,1,.36,1)";
+    card.style.transform="perspective(800px) rotateX(0deg) rotateY(0deg) scale(1) translateZ(0px)";
     if(card._shine) card._shine.style.background="none";
   }
   function attachTilt(card){
     if(card._tilt) return;
     card._tilt=true;
-    // Set perspective on parent grid so all cards share same vanishing point
-    if(card.parentNode&&!card.parentNode._hasPerspective){
-      card.parentNode.style.perspective="1200px";
-      card.parentNode.style.perspectiveOrigin="50% 50%";
-      card.parentNode._hasPerspective=true;
-    }
     const shine=document.createElement("div");
-    shine.className="icard-shine";
+    shine.style.cssText="position:absolute;inset:0;pointer-events:none;z-index:10;border-radius:inherit;mix-blend-mode:screen;transition:background .06s";
     card.appendChild(shine);
     card._shine=shine;
-    card.addEventListener("mousemove",onMove);
-    card.addEventListener("mouseleave",onLeave);
+    card.addEventListener("mousemove",onMove,{passive:true});
+    card.addEventListener("mouseleave",onLeave,{passive:true});
   }
   function scan(root){ root.querySelectorAll(".icard:not([data-tilt])").forEach(c=>{c.dataset.tilt="1";attachTilt(c);}); }
   scan(document);
@@ -2303,7 +2299,7 @@ function renderSettings(){
 <div id="draw-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);flex-direction:column">
   <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border)">
     <button onclick="closeDraw()" style="background:none;border:none;color:var(--txt2);cursor:pointer;font-size:20px;line-height:1;padding:2px 6px">←</button>
-    <span style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--accent2)">polyvalue doodle<span id="draw-secret" style="color:var(--txt3);font-size:10px;margin-left:8px"></span></span>
+    <span style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--accent2)">polyvalue doodle</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <!-- colours -->
       <div id="draw-colors" style="display:flex;gap:4px">
@@ -2323,9 +2319,9 @@ function renderSettings(){
         <button class="ds" data-s="18" title="Thick">●</button>
         <button class="ds" data-s="40" title="Chonk">◉</button>
       </div>
-      <button id="draw-eraser" onclick="toggleEraser()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--txt2);cursor:pointer;font-size:12px">⬜ Eraser</button>
-      <button onclick="clearCanvas()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--txt2);cursor:pointer;font-size:12px">🗑 Clear</button>
-      <button onclick="saveDrawing()" style="background:var(--accent);border:none;border-radius:8px;padding:5px 12px;color:#fff;cursor:pointer;font-size:12px;font-weight:600">💾 Save</button>
+      <button id="draw-eraser" onclick="toggleEraser()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--txt2);cursor:pointer;font-size:12px">Eraser</button>
+      <button onclick="clearCanvas()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--txt2);cursor:pointer;font-size:12px">Clear</button>
+      <button onclick="saveDrawing()" style="background:var(--accent);border:none;border-radius:8px;padding:5px 12px;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Save PNG</button>
     </div>
   </div>
   <canvas id="draw-canvas" style="flex:1;display:block;cursor:crosshair;touch-action:none"></canvas>
@@ -2353,8 +2349,7 @@ function renderSettings(){
   window.openDraw=function(){
     const ov=document.getElementById("draw-overlay");
     ov.style.display="flex";
-    const secrets=["🤫 secret unlocked","✨ you found it","🎨 go wild","🐸 ribbit","💜 made with vibes"];
-    document.getElementById("draw-secret").textContent=secrets[Math.floor(Math.random()*secrets.length)];
+    document.getElementById("draw-secret").textContent="";
     initCanvas();
   };
 
