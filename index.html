@@ -17,13 +17,14 @@
 <meta name="twitter:image" content="https://polyvalue.xyz/preview.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-[data-theme="light"]{
-  --bg:#f0f0f8;--bg2:#ffffff;--bg3:#e8e8f0;--bg4:#d8d8ec;--bg5:#c8c8e0;
-  --txt:#0d0d1a;--txt2:#4a4a6a;--txt3:#8a8aaa;
-  --border:#d0d0e8;
-}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+.icard:active{transform:translateY(-2px) scale(1.008)!important}
 .toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.settings-section-label{font-size:11px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.6px;margin-top:4px;padding-left:2px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;cursor:pointer;padding:10px 14px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);transition:.12s}
+.settings-row:hover{background:var(--bg4)}
+body.compact-grid .item-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:7px}
+body.compact-grid .item-card{padding:8px}
 .toggle-switch input{opacity:0;width:0;height:0}
 .toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--bg5);border-radius:24px;transition:.2s}
 .toggle-slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
@@ -40,6 +41,15 @@
   --glow-rare:0 0 0 1px rgba(184,173,255,0.35),0 4px 32px rgba(124,109,240,0.2);
   --glow-hoarded:0 0 0 1px rgba(255,204,85,0.3),0 4px 32px rgba(255,170,0,0.15);
   --glow-projected:0 0 0 1px rgba(240,104,88,0.3),0 4px 32px rgba(240,80,60,0.15);
+}
+[data-theme="light"]{
+  --bg:#f4f4fb;--bg2:#ffffff;--bg3:#ebebf7;--bg4:#ddddf0;--bg5:#cecee8;
+  --txt:#0d0d1a;--txt2:#55557a;--txt3:#9090b8;
+  --accent:#6658e0;--accent2:#8070f0;--accent3:#4a3cc8;
+  --border:#d4d4ec;
+  --glow-rare:0 0 0 1px rgba(102,88,224,0.25),0 4px 24px rgba(102,88,224,0.12);
+  --glow-hoarded:0 0 0 1px rgba(180,140,0,0.25),0 4px 24px rgba(180,140,0,0.1);
+  --glow-projected:0 0 0 1px rgba(200,60,50,0.25),0 4px 24px rgba(200,60,50,0.1);
 }
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
 
@@ -111,8 +121,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 
 /* GRID */
 .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
-.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s ease,border-color .18s ease;position:relative;will-change:transform;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both}
-.icard:hover{transform:translateY(-4px) scale(1.015)}
+.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:box-shadow .18s ease,border-color .18s ease;position:relative;will-change:transform;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both;transform-style:preserve-3d;transform:perspective(600px) rotateX(0deg) rotateY(0deg) translateZ(0)}
+.icard:active{filter:brightness(.92)!important}
 .icard:nth-child(1){animation-delay:.02s}.icard:nth-child(2){animation-delay:.04s}.icard:nth-child(3){animation-delay:.06s}
 .icard:nth-child(4){animation-delay:.08s}.icard:nth-child(5){animation-delay:.10s}.icard:nth-child(6){animation-delay:.12s}
 .icard:nth-child(7){animation-delay:.13s}.icard:nth-child(8){animation-delay:.14s}.icard:nth-child(n+9){animation-delay:.15s}
@@ -446,7 +456,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:28px 28p
     <div class="filter-bar">
       <input class="finput" id="item-search" placeholder="Search…" autocomplete="off">
       <select class="sort-sel" id="sort-sel">
-        <option value="">Default</option>
+        <option value="">Release Date ↓</option>
         <option value="rap-desc">RAP: High → Low</option>
         <option value="rap-asc">RAP: Low → High</option>
         <option value="val-desc">Value: High → Low</option>
@@ -731,13 +741,63 @@ document.querySelectorAll(".ntab").forEach(b=>{
 
 async function checkAuth(){
   try{
+    // Check URL for auth redirect with user data (cross-domain fix)
+    const params=new URLSearchParams(window.location.search);
+    const authStatus=params.get("auth");
+    const uParam=params.get("u");
+    if(authStatus==="success"&&uParam){
+      try{
+        const userData=JSON.parse(atob(uParam.replace(/-/g,"+").replace(/_/g,"/")));
+        const av=userData.avatar?`https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png?size=64`:null;
+        discordUser={loggedIn:true,id:userData.id,username:userData.username,avatarUrl:av};
+        localStorage.setItem("pv_user",JSON.stringify(discordUser));
+        window.history.replaceState({},"","/");
+        renderAuthArea();
+        renderPostForm();
+        setTimeout(startDmPolling,500);
+        return;
+      }catch(e){}
+    }
+    if(authStatus==="error"){
+      window.history.replaceState({},"","/");
+    }
+    // Check localStorage cache first
+    const cached=localStorage.getItem("pv_user");
+    if(cached){
+      try{
+        discordUser=JSON.parse(cached);
+        renderAuthArea();
+        renderPostForm();
+        if(discordUser) setTimeout(startDmPolling,500);
+      }catch(e){}
+    }
+    // Always verify with server
     const r=await fetch(API+"/auth/me",{credentials:"include"});
     const d=await r.json();
-    discordUser=d.loggedIn?d:null;
+    if(d.loggedIn){
+      discordUser=d;
+      localStorage.setItem("pv_user",JSON.stringify(d));
+    } else {
+      discordUser=null;
+      localStorage.removeItem("pv_user");
+    }
     renderAuthArea();
     renderPostForm();
     if(discordUser) setTimeout(startDmPolling,500);
-  }catch(e){renderAuthArea();}
+  }catch(e){
+    // Server unreachable - fall back to localStorage
+    const cached=localStorage.getItem("pv_user");
+    if(cached){ try{ discordUser=JSON.parse(cached); }catch(e){} }
+    renderAuthArea();
+  }
+}
+
+async function logout(){
+  discordUser=null;
+  localStorage.removeItem("pv_user");
+  await fetch(API+"/auth/logout",{method:"POST",credentials:"include"}).catch(()=>{});
+  renderAuthArea();
+  renderPostForm();
 }
 
 function renderAuthArea(){
@@ -756,10 +816,6 @@ function renderAuthArea(){
   }
 }
 
-async function logout(){
-  await fetch(API+"/auth/logout",{method:"POST",credentials:"include"});
-  discordUser=null; renderAuthArea(); renderPostForm();
-}
 
 function renderPostForm(){
   document.getElementById("login-prompt").style.display=discordUser?"none":"block";
@@ -875,6 +931,45 @@ function renderCard(item){
     </div>
   </div>`;
 }
+
+// ── 3D card tilt ──
+(function(){
+  const TILT=12, LIFT=18, SCALE=1.03;
+  function onMove(e){
+    const card=e.currentTarget;
+    const r=card.getBoundingClientRect();
+    const cx=(e.clientX-r.left)/r.width-0.5;
+    const cy=(e.clientY-r.top)/r.height-0.5;
+    card.style.transition="box-shadow .18s ease,border-color .18s ease";
+    card.style.transform=`perspective(600px) rotateX(${(-cy*TILT).toFixed(2)}deg) rotateY(${(cx*TILT).toFixed(2)}deg) translateZ(${LIFT}px) scale(${SCALE})`;
+    if(card._shine) card._shine.style.background=`radial-gradient(circle at ${(cx+0.5)*100}% ${(cy+0.5)*100}%,rgba(255,255,255,.12) 0%,transparent 65%)`;
+  }
+  function onLeave(e){
+    const card=e.currentTarget;
+    card.style.transition="transform .35s cubic-bezier(.22,1,.36,1),box-shadow .18s ease,border-color .18s ease";
+    card.style.transform="perspective(600px) rotateX(0deg) rotateY(0deg) translateZ(0) scale(1)";
+    if(card._shine) card._shine.style.background="none";
+  }
+  function attachTilt(card){
+    if(card._tilt) return;
+    card._tilt=true;
+    const shine=document.createElement("div");
+    shine.style.cssText="position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:10;transition:background .08s";
+    card.appendChild(shine);
+    card._shine=shine;
+    card.addEventListener("mousemove",onMove);
+    card.addEventListener("mouseleave",onLeave);
+  }
+  function scan(root){ root.querySelectorAll(".icard").forEach(attachTilt); }
+  scan(document);
+  new MutationObserver(muts=>{
+    muts.forEach(m=>m.addedNodes.forEach(n=>{
+      if(n.nodeType!==1) return;
+      if(n.classList&&n.classList.contains("icard")) attachTilt(n);
+      else n.querySelectorAll&&n.querySelectorAll(".icard").forEach(attachTilt);
+    }));
+  }).observe(document.body,{childList:true,subtree:true});
+})();
 
 const chips=[["v",()=>fV=!fV],["h",()=>fH=!fH],["r",()=>fR=!fR],["p",()=>fP=!fP]];
 chips.forEach(([k,tog])=>{
@@ -1628,14 +1723,22 @@ preloadItems();
 setupPicker("offer");
 setupPicker("want");
 
+// Apply saved settings on boot
+(()=>{
+  if(localStorage.getItem("pv_compact")==="1") document.body.classList.add("compact-grid");
+  if(localStorage.getItem("pv_dms_open")==="") localStorage.setItem("pv_dms_open","1"); // default on
+})();
+
 window.addEventListener("load",()=>{
   if(document.getElementById("page-trades").classList.contains("active")) loadTrades();
 });
 
 let dmPeerId=null, dmPeerName="", dmPeerAv="", dmPollTimer=null, dmLastTs=0, dmUnread=0, dmSoundUnlocked=false;
+// Restore sound pref (need click-unlock still applies, but remember the user's choice)
+if(localStorage.getItem("pv_sound")==="1") dmSoundUnlocked=true;
 const DM_POLL=15000;
 
-document.addEventListener("click",()=>{ dmSoundUnlocked=true; },{once:true});
+document.addEventListener("click",()=>{ dmSoundUnlocked=localStorage.getItem("pv_sound")!=="0"; },{once:true});
 
 function playNotifSound(){
   if(!dmSoundUnlocked) return;
@@ -1789,9 +1892,11 @@ function formatMentions(text){
 
 function renderChatMsg(m, container){
   const mine = discordUser && m.userId===discordUser.id;
+  const showTs = localStorage.getItem("pv_timestamps")==="1";
   const av = m.avatar
     ? `<img src="https://cdn.discordapp.com/avatars/${m.userId}/${m.avatar}.png?size=32" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;margin-top:2px" onerror="this.style.display='none'">`
     : `<div style="width:30px;height:30px;border-radius:50%;background:var(--bg4);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--txt2)">${esc((m.username||"?")[0].toUpperCase())}</div>`;
+  const tsStr = showTs ? new Date(m.ts*1000).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}) : timeAgo(m.ts);
   const row = document.createElement("div");
   row.className="chat-msg-row";
   row.dataset.msgId=m.id||"";
@@ -1800,7 +1905,7 @@ function renderChatMsg(m, container){
     <div style="flex:1;min-width:0">
       <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:2px">
         <span style="font-size:12px;font-weight:700;color:${mine?"var(--accent2)":"var(--txt)"}">${esc(m.username)}</span>
-        <span style="font-size:10px;color:var(--txt3)">${timeAgo(m.ts)}</span>
+        <span style="font-size:10px;color:var(--txt3)">${tsStr}</span>
       </div>
       <div style="font-size:13px;line-height:1.5;word-break:break-word">${formatMentions(m.text)}</div>
     </div>
@@ -2047,37 +2152,81 @@ function renderSettings(){
     return;
   }
   const av=discordUser.avatarUrl||"";
+  const s=key=>localStorage.getItem(key);
   body.innerHTML=`
     <div style="display:flex;align-items:center;gap:14px;padding:8px 0 20px;border-bottom:1px solid var(--border);margin-bottom:20px">
       ${av?`<img src="${esc(av)}" style="width:52px;height:52px;border-radius:50%;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:52px;height:52px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--txt2)">${esc((discordUser.username||"?")[0].toUpperCase())}</div>`}
       <div>
         <div style="font-size:15px;font-weight:700">${esc(discordUser.username||"")}</div>
-        <div style="font-size:12px;color:var(--txt2);margin-top:2px">Discord connected</div>
+        <div style="font-size:12px;color:var(--txt2);margin-top:2px">Discord connected ✓</div>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Notifications</div>
-      <label style="display:flex;align-items:center;justify-content:space-between;font-size:13px;cursor:pointer;padding:10px 14px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)">
-        <span>Sound on new DM or @mention</span>
-        <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-sound"><span class="toggle-slider"></span></label>
-      </label>
-      <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-top:8px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Appearance</div>
-      <label style="display:flex;align-items:center;justify-content:space-between;font-size:13px;cursor:pointer;padding:10px 14px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)">
-        <span>Light mode</span>
+    <div style="display:flex;flex-direction:column;gap:8px">
+
+      <div class="settings-section-label">Appearance</div>
+      <label class="settings-row">
+        <span>🌙 Light mode</span>
         <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-light"><span class="toggle-slider"></span></label>
       </label>
-      <div style="padding-top:14px;border-top:1px solid var(--border);margin-top:6px">
-        <button class="btn" style="background:var(--bg4);color:var(--red);border:1px solid rgba(240,104,88,.3)"
-          onclick="fetch(API+'/auth/logout',{method:'POST',credentials:'include'}).then(()=>location.reload())">
+      <label class="settings-row">
+        <span>⬛ Compact item grid</span>
+        <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-compact"><span class="toggle-slider"></span></label>
+      </label>
+
+      <div class="settings-section-label" style="margin-top:8px">Notifications</div>
+      <label class="settings-row">
+        <span>🔔 Sound on DM / @mention</span>
+        <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-sound"><span class="toggle-slider"></span></label>
+      </label>
+      <label class="settings-row">
+        <span>💬 Show chat timestamps</span>
+        <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-timestamps"><span class="toggle-slider"></span></label>
+      </label>
+
+      <div class="settings-section-label" style="margin-top:8px">Privacy</div>
+      <label class="settings-row">
+        <span>📨 Allow DMs from anyone</span>
+        <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-dms-open"><span class="toggle-slider"></span></label>
+      </label>
+      <label class="settings-row">
+        <span>📊 Save RAP history</span>
+        <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="setting-rap-history"><span class="toggle-slider"></span></label>
+      </label>
+
+      <div style="padding-top:16px;border-top:1px solid var(--border);margin-top:8px">
+        <button class="btn" style="background:var(--bg4);color:var(--red);border:1px solid rgba(240,104,88,.3);width:100%" onclick="logout()">
           Sign Out
         </button>
       </div>
     </div>`;
-  document.getElementById("setting-sound").checked=dmSoundUnlocked;
-  document.getElementById("setting-sound").addEventListener("change",e=>{ dmSoundUnlocked=e.target.checked; });
-  const lightToggle=document.getElementById("setting-light");
-  lightToggle.checked=document.documentElement.dataset.theme==="light";
-  lightToggle.addEventListener("change",()=>toggleTheme());
+
+  // Wire up toggles
+  const lt=document.getElementById("setting-light");
+  lt.checked=document.documentElement.dataset.theme==="light";
+  lt.addEventListener("change",()=>toggleTheme());
+
+  const st=document.getElementById("setting-sound");
+  st.checked=dmSoundUnlocked;
+  st.addEventListener("change",e=>{ dmSoundUnlocked=e.target.checked; localStorage.setItem("pv_sound",e.target.checked?"1":"0"); });
+
+  const ct=document.getElementById("setting-compact");
+  ct.checked=localStorage.getItem("pv_compact")==="1";
+  ct.addEventListener("change",e=>{
+    localStorage.setItem("pv_compact",e.target.checked?"1":"0");
+    document.body.classList.toggle("compact-grid",e.target.checked);
+  });
+
+  const ts=document.getElementById("setting-timestamps");
+  ts.checked=localStorage.getItem("pv_timestamps")==="1";
+  ts.addEventListener("change",e=>{ localStorage.setItem("pv_timestamps",e.target.checked?"1":"0"); });
+
+  const dm=document.getElementById("setting-dms-open");
+  dm.checked=localStorage.getItem("pv_dms_open")!=="0";
+  dm.addEventListener("change",e=>{ localStorage.setItem("pv_dms_open",e.target.checked?"1":"0"); });
+
+  const rap=document.getElementById("setting-rap-history");
+  rap.checked=localStorage.getItem("pv_rap_history")!=="0";
+  rap.addEventListener("change",e=>{ localStorage.setItem("pv_rap_history",e.target.checked?"1":"0"); });
 }
 </script>
 </body>
